@@ -1,0 +1,21 @@
+{
+    "epochs":15,
+    "batch_size":128,
+    "train_years":[2013,2014,2015,2016,2017,2018,2019,2020],
+    "val_years":[2021,2022],
+    "start_filters":48,
+    "learning_rate":1e-4,
+    "decay_steps":1386,
+    "decay_rate":0.958,
+    "l2_reg":1e-5,
+    "wN":1.0,
+    "w0":1.0,
+    "w1":1.0,
+    "w2":2.0,
+    "wW":0.5,
+    "label_smooth":0.1,
+    "loss":"cce",
+    "head":"maxpool",
+    "exp_name":"tornado_baseline",
+    "filter_warnings":false
+}
