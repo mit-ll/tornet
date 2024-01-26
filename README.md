@@ -30,7 +30,9 @@ After downloading, there should be 11 files, `catalog.csv`, and 10 files named l
 
 ## Setup
 
-Basic requirements are listed in `requirements/basic.txt`. The `tornet` package can installed into your environment by running
+Basic python requirements are listed in `requirements/basic.txt` and can be installed using `pip install -r requirements.txt`.
+
+The `tornet` package can then installed into your environment by running
 
 `pip install .`
 
