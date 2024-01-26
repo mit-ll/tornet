@@ -1,0 +1,7 @@
+__pycache__/
+.ipynb_checkpoints/
+*.ipynb
+*log-*
+*.egg-info
+experiments/
+lightning_logs/
