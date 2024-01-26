@@ -61,7 +61,7 @@ Weights of a pretrained CNN baseline are provided in `model/`.  To evaluate this
 export TORNET_ROOT=/path/to/tornet  
 
 # Evaluate trained model
-python scripts/tornado_detection/test_tornado_tf.py models/tornado_detector_v231114.SavedModel
+python scripts/tornado_detection/test_tornado_tf.py models/tornado_detector_baseline.SavedModel
 ```
 
 This will compute and print various metrics computed on the test set.
