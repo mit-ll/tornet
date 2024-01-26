@@ -6,11 +6,11 @@ Software to work with the TorNet dataset as described in the paper "A Benchmark 
 
 ## Downloading the Data
 
-The TorNet dataset can be downloaded from the following location
+The TorNet dataset can be downloaded from the following location:
 
 #### Zenodo
 
-TorNet is split across 10 files, each containing 1 year of data. There is also a catalog CSV file that is used by some functions in this repo.    
+TorNet is split across 10 files, each containing 1 year of data. There is also a catalog CSV file that is used by some functions in this repository.    
 
 * Tornet 2013 (3 GB) and catalog: [https://zenodo.org/doi/10.5281/zenodo.10558658](https://zenodo.org/doi/10.5281/zenodo.10558658)
 * Tornet 2014 (15 GB): [https://zenodo.org/doi/10.5281/zenodo.10558838](https://zenodo.org/doi/10.5281/zenodo.10558838)
@@ -23,9 +23,9 @@ TorNet is split across 10 files, each containing 1 year of data. There is also a
 * Tornet 2021 (18 GB): [https://zenodo.org/doi/10.5281/zenodo.10565670](https://zenodo.org/doi/10.5281/zenodo.10565670)
 * Tornet 2022 (19 GB): [https://zenodo.org/doi/10.5281/zenodo.10565691](https://zenodo.org/doi/10.5281/zenodo.10565691)
 
-If downloading through your browser is slow, I recommend downloading these using `zenodo_get` (https://gitlab.com/dvolgyes/zenodo_get).
+If downloading through your browser is slow, we recommend downloading these using `zenodo_get` (https://gitlab.com/dvolgyes/zenodo_get).
 
-After downloading, there should be 11 files, `catalog.csv`, and 10 files named like `tornet_YYYY.tar.gz`.   Move and untar these into a target directory, which will be referenced using the `TORNET_ROOT` environment variable in the code.  After untarring the 10 files, this directory should contain `catalog.csv` along with sub-directories `train/` and `test/` filled with `.nc` files for each year in the dataset.
+After downloading, there should be 11 files, `catalog.csv`, and 10 files named as `tornet_YYYY.tar.gz`.   Move and untar these into a target directory, which will be referenced using the `TORNET_ROOT` environment variable in the code.  After untarring the 10 files, this directory should contain `catalog.csv` along with sub-directories `train/` and `test/` filled with `.nc` files for each year in the dataset.
 
 
 ## Setup
@@ -36,7 +36,7 @@ The `tornet` package can then installed into your environment by running
 
 `pip install .`
 
-in this repo.  To do ML with TorNet, additional installs may be necessary depending on library of choice.  See e.g. `requirements/tensorflow.txt`, `requirements/torch.txt`.
+in this repo.  To do ML with TorNet, additional installs may be necessary depending on library of choice.  See e.g., `requirements/tensorflow.txt`, `requirements/torch.txt`.
 
 ## Loading and visualizing TorNet
 
