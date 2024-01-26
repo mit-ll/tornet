@@ -2,10 +2,7 @@
 
 Software to work with the TorNet dataset as described in the paper "A Benchmark Dataset for Tornado Detection and Prediction using Full-Resolution Polarimetric Weather Radar Data" (link to preprint coming soon)
 
-![image](https://media.llcad-github.llan.ll.mit.edu/user/1265/files/dba673a7-0f71-42cf-878d-7f5eaad6997c)
-
 ## Downloading the Data
-
 
 The TorNet dataset can be downloaded from the following location
 
