@@ -1,6 +1,6 @@
 # TorNet
 
-Software to work with the TorNet dataset as described in the paper "A Benchmark Dataset for Tornado Detection and Prediction using Full-Resolution Polarimetric Weather Radar Data" (link to preprint coming soon)
+Software to work with the TorNet dataset as described in the paper "A Benchmark Dataset for Tornado Detection and Prediction using Full-Resolution Polarimetric Weather Radar Data" [https://arxiv.org/abs/2401.16437](https://arxiv.org/abs/2401.16437)
 
 ![Alt text](tornet_image.png?raw=true "sample")
 
