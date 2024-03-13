@@ -59,6 +59,10 @@ def read_file(f: str,
         data['rng_upper']=np.array(ds['range_limits'].values[1:])
         data['time']=(ds.time.values[-n_frames:].astype(np.int64)/1e9).astype(np.int64)
 
+    # Fix for v1 of the data
+    # Make sure final label is consistent with ef_number 
+    data['label'][-1] = (data['ef_number'][0]>=0)
+    
     if not tilt_last: 
         for v in variables+['range_folded_mask']:
             data[v]=np.transpose(data[v],(0,3,1,2))
