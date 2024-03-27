@@ -88,7 +88,8 @@ def make_ds(data_root: str,
             filter_warnings: bool=False,
             include_az: bool=False,
             random_state:int=1234,
-            from_tfds: bool=False):
+            from_tfds: bool=False,
+            tfds_data_version: str='1.1.0'):
     """
     Initializes tf.data Dataset for training CNN Tornet baseline.
 
@@ -127,7 +128,7 @@ def make_ds(data_root: str,
     if from_tfds: # fast loader
         import tensorflow_datasets as tfds
         import tornet.data.tfds.tornet.tornet_dataset_builder # registers 'tornet'
-        ds = tfds.load('tornet',split='+'.join(['%s-%d' % (data_type,y) for y in years]))
+        ds = tfds.load('tornet:%s' % tfds_data_version ,split='+'.join(['%s-%d' % (data_type,y) for y in years]))
     else: # Load directly from netcdf files
         # Load TorNet catalog
         catalog_path = os.path.join(data_root,'catalog.csv')
