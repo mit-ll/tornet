@@ -15,6 +15,7 @@ Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part
 Tools to read tornado samples
 """
 from typing import Dict, List, Callable
+import datetime
 import numpy as np
 import xarray as xr
 
@@ -58,8 +59,21 @@ def read_file(f: str,
         data['rng_lower']=np.array(ds['range_limits'].values[0:1])
         data['rng_upper']=np.array(ds['range_limits'].values[1:])
         data['time']=(ds.time.values[-n_frames:].astype(np.int64)/1e9).astype(np.int64)
+        
+        # Store start/end times for tornado (Added in v1.1)
+        if ds.attrs['ef_number']>=0:
+            start_time=datetime.datetime.strptime(ds.attrs['tornado_start_time'],'%Y-%m-%d %H:%M:%S')
+            end_time=datetime.datetime.strptime(ds.attrs['tornado_end_time'],'%Y-%m-%d %H:%M:%S')
+            epoch = datetime.datetime(1970,1,1)
+            to_timestamp = lambda d: int((d - epoch).total_seconds())
+            start_time=to_timestamp(start_time)
+            end_time=to_timestamp(end_time)
+        else:
+            start_time=end_time=0
+        data['tornado_start_time'] = np.array([start_time]).astype(np.int64)
+        data['tornado_end_time'] = np.array([end_time]).astype(np.int64)
 
-    # Fix for v1 of the data
+    # Fix for v1.0 of the data
     # Make sure final label is consistent with ef_number 
     data['label'][-1] = (data['ef_number'][0]>=0)
     

@@ -13,9 +13,10 @@ class Builder(tfds.core.GeneratorBasedBuilder):
   DatasetBuilder for tornet.  See README.md in this directory for how to build
   """
 
-  VERSION = tfds.core.Version('1.0.0')
+  VERSION = tfds.core.Version('1.1.0')
   RELEASE_NOTES = {
       '1.0.0': 'Initial release.',
+      '1.1.0': 'Label Fix, added start/end times',
   }
   MANUAL_DOWNLOAD_INSTRUCTIONS = """
   Find instructions to download TorNet on https://github.com/mit-ll/tornet
@@ -43,6 +44,8 @@ class Builder(tfds.core.GeneratorBasedBuilder):
             'rng_lower': tfds.features.Tensor(shape=(1,),dtype=np.float32),
             'rng_upper': tfds.features.Tensor(shape=(1,),dtype=np.float32),
             'time': tfds.features.Tensor(shape=(4,),dtype=np.int64),
+            'tornado_start_time': tfds.features.Tensor(shape=(1,),dtype=np.int64),
+            'tornado_end_time': tfds.features.Tensor(shape=(1,),dtype=np.int64),
         }),
         supervised_keys=None,  # Set to `None` to disable
         homepage='https://github.com/mit-ll/tornet',
