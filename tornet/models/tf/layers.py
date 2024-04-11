@@ -33,20 +33,26 @@ class CoordConv2D(tf.keras.layers.Conv2D):
         self.ksize=kernel_size
         self.padding=padding
         self.strd=strides[0] # assume equal strides
+        self.input_spec = None
     
-    def build(self,input_shape):
-        super(CoordConv2D, self).build(input_shape)
-    
-    def call(self, inputs, coords):
+    def build(self,input_shapes):
+        x_shape, coord_shape = input_shapes
+        new_shape = x_shape.as_list()
+        new_shape[-1] += coord_shape[-1]
+        super(CoordConv2D, self).build(new_shape)
+        self.input_spec = None
+
+    def call(self, inputs):
         """
         inputs is [N, L, W, C] tensor
         coords is [N, L, W, nd] tensor of coordiantes
         """
+        x, coords = inputs
         # Stack x with coordinates
-        x = tf.concat( (inputs,coords), axis=3)
+        x = tf.concat( (x,coords), axis=3)
         
         # Run convolution
-        conv=super(CoordConv2D, self).call(inputs)
+        conv=super(CoordConv2D, self).call(x)
         
         # The returned coordinates should have same shape as conv 
         # prep the coordiantes by slicing them to the same shape  

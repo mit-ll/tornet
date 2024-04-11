@@ -96,7 +96,7 @@ def vgg_block(x,c, filters=64, ksize=3, n_convs=2, l2_reg=1e-6, drop_rate=0.0):
                           kernel_size=ksize,
                           kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
                           padding='same',
-                          activation='relu')(x,c)
+                          activation='relu')([x,c])
     x = tf.keras.layers.MaxPool2D(pool_size =2, strides =2, padding ='same')(x)
     c = tf.keras.layers.MaxPool2D(pool_size =2, strides =2, padding ='same')(c)
     if drop_rate>0:
