@@ -30,10 +30,8 @@ from tornet.metrics.tf import metrics as tfm
 from tornet.utils.general import make_exp_dir, make_callback_dirs
 
 EXP_DIR=os.environ.get('EXP_DIR','.')
-data_root=os.environ['TORNET_ROOT']
-from_saved_tfdataset=True # Set to true if TORNET_ROOT contains saved tfdatasets
-data_root_train=os.path.join(data_root,'train') 
-data_root_test=os.path.join(data_root,'test')
+DATA_ROOT=os.environ['TORNET_ROOT']
+from_tfds = True
 
 DEFAULT_CONFIG={
     'epochs':10,
@@ -94,21 +92,23 @@ def main(config):
     
     ## Set up data loaders
     weights={'wN':wN,'w0':w0,'w1':w1,'w2':w2,'wW':wW}
-    ds_train = make_ds(data_root,
+    ds_train = make_ds(DATA_ROOT,
                        'train',
                        train_years,
                        batch_size=batch_size,
                        weights=weights,
                        filter_warnings=filter_warn,
-                       include_az=False)
+                       include_az=False,
+                       from_tfds=from_tfds)
 
-    ds_val = make_ds(data_root,
+    ds_val = make_ds(DATA_ROOT,
                      'train',
                      val_years,
                      batch_size=batch_size,
                      weights=weights,
                      filter_warnings=filter_warn,
-                     include_az=False)
+                     include_az=False,
+                     from_tfds=from_tfds)
 
     ds_train=ds_train.with_options(data_opts)
     ds_val=ds_val.with_options(data_opts)
@@ -168,7 +168,7 @@ def main(config):
     # Copy the properties that were used
     with open(os.path.join(expdir,'data.json'),'w') as f:
         json.dump(
-            {'data_root':data_root,
+            {'data_root':DATA_ROOT,
              'train_data':list(train_years), 
              'val_data':list(val_years)},f)
     with open(os.path.join(expdir,'params.json'),'w') as f:
