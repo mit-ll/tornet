@@ -16,10 +16,9 @@ Custom layers for tornado detection
 """
 import tensorflow as tf
 
-class CoordConv2D(tf.keras.layers.Conv2D):
+class CoordConv2D(tf.keras.layers.Layer):
     """
-    CoodConv2d layers as described in 
-
+    Adopted from the CoodConv2d layers as described in 
     Liu, Rosanne, et al. "An intriguing failing of convolutional neural networks and 
     the coordconv solution." Advances in neural information processing systems 31 (2018).
     
@@ -29,25 +28,28 @@ class CoordConv2D(tf.keras.layers.Conv2D):
                       padding='same',
                       strides=(1,1),
                       **kwargs):
-        super(CoordConv2D, self).__init__(filters,kernel_size,padding=padding,strides=strides,**kwargs)
+        super(CoordConv2D, self).__init__()
         self.ksize=kernel_size
         self.padding=padding
+        self.conv = tf.keras.layers.Conv2D(filters,kernel_size,
+                                           padding=padding,strides=strides,
+                                           **kwargs)
         self.strd=strides[0] # assume equal strides
     
-    def build(self,input_shape):
-        super(CoordConv2D, self).build(input_shape)
-    
-    def call(self, inputs, coords):
+    def call(self,inputs):
         """
-        inputs is [N, L, W, C] tensor
-        coords is [N, L, W, nd] tensor of coordiantes
+        inputs is a tuple 
+           [N, L, W, C] data tensor,
+           [N, L, W, nd] tensor of coordiantes
         """
+        x, coords = inputs
+        
         # Stack x with coordinates
-        x = tf.concat( (inputs,coords), axis=3)
+        x = tf.concat( (x,coords), axis=3)
         
         # Run convolution
-        conv=super(CoordConv2D, self).call(inputs)
-        
+        conv=self.conv(x)
+
         # The returned coordinates should have same shape as conv 
         # prep the coordiantes by slicing them to the same shape  
         # as conv
@@ -62,4 +64,3 @@ class CoordConv2D(tf.keras.layers.Conv2D):
                 coords = coords[:,::self.strd,::self.strd]
         
         return conv,coords
-
