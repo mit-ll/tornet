@@ -45,20 +45,20 @@ DEFAULT_CONFIG={
     'val_years':list(range(2021,2023)),
     'batch_size':128,
     'model':'vgg',
-    'start_filters':96,
+    'start_filters':48,
     'learning_rate':1e-4,
     'decay_steps':1386,
     'decay_rate':0.958,
-    'l2_reg':1e-4,
+    'l2_reg':1e-5,
     'wN':1.0,
-    'w0':0.5,
-    'w1':2.0,
-    'w2':4.0,
-    'wW':0.25,
-    'label_smooth':0.2,
+    'w0':1.0,
+    'w1':1.0,
+    'w2':2.0,
+    'wW':0.5,
+    'label_smooth':0,
     'loss':'cce',
     'head':'maxpool',
-    'filter_warnings':True,
+    'filter_warnings':False,
     'filter_ef0':False,
     'exp_name':'tornet_baseline',
     'exp_dir':EXP_DIR
@@ -72,22 +72,20 @@ def main(config):
     epochs=config.get('epochs')
     batch_size=config.get('batch_size')
     start_filters=config.get('start_filters')
-    learning_rate=config.get('learning_rate') 
-    decay_steps=config.get('decay_steps',1386) 
-    decay_rate=config.get('decay_rate',0.958) 
-    l2_reg=config.get('l2_reg',1e-8)
-    wN=config.get('wN',1.0)
-    w0=config.get('w0',0.25) 
-    w1=config.get('w1',1.0) 
-    w2=config.get('w2',2.0) 
-    wW=config.get('wW',0.25) 
-    head=config.get('head','mlp')
-    label_smooth=config.get('label_smooth',0.2)
-    loss_fn = config.get('loss','cce')
+    learning_rate=config.get('learning_rate')
+    decay_steps=config.get('decay_steps')
+    decay_rate=config.get('decay_rate')
+    l2_reg=config.get('l2_reg')
+    wN=config.get('wN')
+    w0=config.get('w0')
+    w1=config.get('w1')
+    w2=config.get('w2')
+    wW=config.get('wW')
+    head=config.get('head')
+    label_smooth=config.get('label_smooth')
+    loss_fn = config.get('loss')
     filter_warn=config.get('filter_warnings')
-    filter_ef0=config.get('filter_ef0')
-    model = config.get('model','resnet50')
-    input_variables=config.get('input_variables',ALL_VARIABLES)
+    input_variables=config.get('input_variables')
     exp_name=config.get('exp_name')
     exp_dir=config.get('exp_dir')
     train_years=config.get('train_years')
