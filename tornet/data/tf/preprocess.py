@@ -20,7 +20,7 @@ def split_x_y(d):
     """
     Splits dict into X,y, where y are tornado labels
     """
-    y=d['ef_number'][None,:]>=0 
+    y=d['label']
     return d,y
 
 
