@@ -6,4 +6,4 @@ xarray
 netCDF4
 tqdm
 glob2
-
+jupyter
