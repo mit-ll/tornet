@@ -11,11 +11,12 @@ The software/firmware is provided to you on an As-Is basis
 Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part 252.227-7013 or 7014 (Feb 2014). Notwithstanding any copyright notice, U.S. Government rights in this work are defined by DFARS 252.227-7013 or DFARS 252.227-7014 as detailed above. Use of this work other than as specifically authorized by the U.S. Government may violate any copyrights that exist in this work.
 """
 
-import tensorflow as tf
+import keras
+from keras import ops
 
 def _prep(class_labels, logits):
-    y_true = tf.cast(class_labels, dtype=logits.dtype)
-    y_pred = tf.math.sigmoid(logits) # p=1 means class label=1
+    y_true = ops.cast(class_labels, dtype=logits.dtype)
+    y_pred = ops.sigmoid(logits) # p=1 means class label=1
     return y_true,y_pred
 
 
@@ -26,10 +27,10 @@ def mae_loss( class_labels, logits, sample_weights=None ):
     """
     y_true,y_pred=_prep(class_labels, logits)
     if sample_weights is not None:
-        denom=tf.reduce_sum(sample_weights)
-        return tf.reduce_sum( sample_weights*tf.math.abs(y_true-y_pred) ) / denom
+        denom=ops.sum(sample_weights)
+        return ops.sum( sample_weights*ops.absolute(y_true-y_pred) ) / denom
     else:
-        return tf.reduce_mean( tf.math.abs(y_true-y_pred) )
+        return ops.mean( ops.absolute(y_true-y_pred) )
 
 
 def jaccard_loss(class_labels, logits):
@@ -41,9 +42,9 @@ def jaccard_loss(class_labels, logits):
     intersection = y_true * y_pred
     union = y_true + y_pred - intersection
     # Calculate the Jaccard similarity coefficient (IoU)
-    iou = intersection / (union + 1e-7)  # Adding a small epsilon to prevent division by zero
+    iou = intersection / (union + keras.config.epsilon())  # Adding a small epsilon to prevent division by zero
     # Jaccard loss is the complement of the Jaccard similarity
-    return tf.reduce_mean(1 - iou)
+    return ops.mean(1 - iou)
 
 
 def dice_loss(class_labels, logits):
@@ -56,4 +57,4 @@ def dice_loss(class_labels, logits):
     intersection = y_true * y_pred
     union = y_true + y_pred
     dice = (2.0 * intersection + 1e-7) / (union + 1e-7)
-    return tf.reduce_mean(1.0-dice)
+    return ops.mean(1.0-dice)

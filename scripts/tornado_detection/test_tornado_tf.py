@@ -15,7 +15,7 @@ import sys
 import os
 import numpy as np
 import pandas as pd
-import tensorflow as tf
+import keras
 
 from tornet.data.tf.loader import make_ds
 from tornet.metrics.tf import metrics as tfm
@@ -37,7 +37,7 @@ def main():
                       filter_warnings=FILTER_WARNINGS,
                       include_az=False)   
     
-    model = tf.keras.models.load_model(trained_model,compile=False)
+    model = keras.saving.load_model(trained_model,compile=False)
 
     # Compute various metrics
     from_logits=True

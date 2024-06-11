@@ -16,6 +16,7 @@ import numpy as np
 import json
 import shutil
 import tensorflow as tf
+import keras
 
 from tornet.data.preprocess import get_shape
 from tornet.data.tf.loader import make_ds
@@ -127,22 +128,22 @@ def main(config):
                      input_variables=input_variables,
                      head=head)
 
-    lr=tf.keras.optimizers.schedules.ExponentialDecay(
-                learning_rate, decay_steps, decay_rate, staircase=False, name=None)
+    lr=keras.optimizers.schedules.ExponentialDecay(
+                learning_rate, decay_steps, decay_rate, staircase=False, name="exp_decay")
     
     from_logits=True
     if loss_fn.lower()=='cce':
-        loss = tf.keras.losses.BinaryCrossentropy( from_logits=from_logits, 
+        loss = keras.losses.BinaryCrossentropy( from_logits=from_logits, 
                                                     label_smoothing=label_smooth )
     elif loss_fn.lower()=='hinge':
-        loss = tf.keras.losses.Hinge() # automatically converts labels to -1,1
+        loss = keras.losses.Hinge() # automatically converts labels to -1,1
     elif loss_fn.lower()=='mae':
         loss = lambda yt,yp: mae_loss(yt,yp)
     else:
         raise RuntimeError('unknown loss %s' % loss_fn)
 
 
-    opt  = tf.keras.optimizers.Adam(learning_rate=lr)
+    opt  = keras.optimizers.Adam(learning_rate=lr)
 
     # Compute various metrics while training
     metrics = [tfm.AUC(from_logits,name='AUC'),
@@ -159,8 +160,7 @@ def main(config):
     nn.compile(loss=loss,
                 metrics=metrics,
                 optimizer=opt,
-                weighted_metrics=[],
-                jit_compile=True)
+                weighted_metrics=[])
     
     ## Setup experiment directory and model callbacks
     expdir = make_exp_dir(exp_dir=exp_dir,prefix=exp_name)
@@ -178,14 +178,14 @@ def main(config):
     
     # Callbacks
     tboard_dir, checkpoints_dir=make_callback_dirs(expdir)
-    checkpoint_name=os.path.join(checkpoints_dir, 'tornadoDetector'+'_{epoch:03d}.SavedModel' )
+    checkpoint_name=os.path.join(checkpoints_dir, 'tornadoDetector'+'_{epoch:03d}.keras' )
     
     callbacks=[]
     callbacks += [
-        tf.keras.callbacks.ModelCheckpoint(checkpoint_name,monitor='val_loss',save_best_only=False),
-        tf.keras.callbacks.CSVLogger(os.path.join(expdir,'history.csv')),
-        tf.keras.callbacks.TensorBoard(log_dir=tboard_dir,write_graph=False),#,profile_batch=(5,15)),
-        tf.keras.callbacks.TerminateOnNaN(),
+        keras.callbacks.ModelCheckpoint(checkpoint_name,monitor='val_loss',save_best_only=False),
+        keras.callbacks.CSVLogger(os.path.join(expdir,'history.csv')),
+        keras.callbacks.TensorBoard(log_dir=tboard_dir,write_graph=False),#,profile_batch=(5,15)),
+        keras.callbacks.TerminateOnNaN(),
     ]
 
     ## FIT
@@ -206,6 +206,7 @@ def main(config):
 
 
 if __name__=='__main__':
+    print(f"Using {keras.config.backend()} backend")
     config=DEFAULT_CONFIG
     # Load param file if given
     if len(sys.argv)>1:

@@ -14,9 +14,10 @@ Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part
 """
 Custom layers for tornado detection
 """
-import tensorflow as tf
+import keras
+from keras import ops
 
-class CoordConv2D(tf.keras.layers.Layer):
+class CoordConv2D(keras.layers.Layer):
     """
     Adopted from the CoodConv2d layers as described in 
 
@@ -30,11 +31,12 @@ class CoordConv2D(tf.keras.layers.Layer):
                       strides=(1,1),
                       **kwargs):
         super(CoordConv2D, self).__init__()
-        self.ksize=kernel_size
+        self.kernel_size=kernel_size
         self.padding=padding
-        self.conv = tf.keras.layers.Conv2D(filters,kernel_size,
-                                           padding=padding,strides=strides,
-                                           **kwargs)
+        self.strides = strides
+        self.conv = keras.layers.Conv2D(
+            filters, kernel_size, padding=padding, strides=strides, **kwargs
+        )
         self.strd=strides[0] # assume equal strides
     
     def call(self,inputs):
@@ -46,7 +48,7 @@ class CoordConv2D(tf.keras.layers.Layer):
         x, coords = inputs
         
         # Stack x with coordinates
-        x = tf.concat( (x,coords), axis=3)
+        x = ops.concat( (x,coords), axis=3)
         
         # Run convolution
         conv=self.conv(x)
@@ -58,7 +60,7 @@ class CoordConv2D(tf.keras.layers.Layer):
             coords = coords[:,::self.strd,::self.strd]
         elif self.padding=='valid':
             # If valid padding,  need to start slightly off the corner
-            i0 = self.ksize[0]//2
+            i0 = self.kernel_size[0]//2
             if i0>0:
                 coords = coords[:,i0:-i0:self.strd,i0:-i0:self.strd]
             else:
@@ -66,5 +68,14 @@ class CoordConv2D(tf.keras.layers.Layer):
         
         return conv,coords
 
-
-
+    def get_config(self):
+        """Get model configuration, used for saving model."""
+        config = super().get_config()
+        config.update(
+            {
+                "kernel_size": self.kernel_size,
+                "padding": self.padding,
+                "strides": self.strides,
+            }
+        )
+        return config

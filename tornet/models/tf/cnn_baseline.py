@@ -13,8 +13,8 @@ Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part
 
 from typing import Dict, List, Tuple
 import numpy as np
-import tensorflow as tf
-
+import keras
+from keras import ops
 from tornet.models.tf.layers import CoordConv2D
 from tornet.data.constants import CHANNEL_MIN_MAX, ALL_VARIABLES
 
@@ -30,28 +30,28 @@ def build_model(shape:Tuple[int]=(120,240,2),
     # Create input layers for each input_variables
     inputs = {}
     for v in input_variables:
-        inputs[v]=tf.keras.Input(shape,name=v)
+        inputs[v]=keras.Input(shape,name=v)
     n_sweeps=shape[2]
     
     # Normalize inputs and concate along channel dim
-    normalized_inputs=tf.keras.layers.Concatenate(axis=-1,name='Concatenate1')(
+    normalized_inputs=keras.layers.Concatenate(axis=-1,name='Concatenate1')(
         [normalize(inputs[v],v) for v in input_variables]
         )
 
     # Replace nan pixel with background flag
-    normalized_inputs = tf.keras.layers.Lambda( 
-            lambda x: tf.where(tf.math.is_nan(x),background_flag,x)
+    normalized_inputs = keras.layers.Lambda( 
+            lambda x: ops.where(ops.isnan(x),background_flag,x)
                         )(normalized_inputs)
                             
     # Add channel for range folded gates 
     if include_range_folded:
-        range_folded = tf.keras.Input(shape[:2]+(n_sweeps,),name='range_folded_mask')
+        range_folded = keras.Input(shape[:2]+(n_sweeps,),name='range_folded_mask')
         inputs['range_folded_mask']=range_folded
-        normalized_inputs = tf.keras.layers.Concatenate(axis=-1,name='Concatenate2')(
+        normalized_inputs = keras.layers.Concatenate(axis=-1,name='Concatenate2')(
                [normalized_inputs,range_folded])
         
     # Input coordinate information
-    cin=tf.keras.Input(c_shape,name='coordinates')
+    cin=keras.Input(c_shape,name='coordinates')
     inputs['coordinates']=cin
     
     x,c = normalized_inputs,cin
@@ -64,23 +64,23 @@ def build_model(shape:Tuple[int]=(120,240,2),
     
     if head=='mlp':
         # MLP head
-        x = tf.keras.layers.Flatten()(x) 
-        x = tf.keras.layers.Dense(units = 4096, activation ='relu')(x) 
-        x = tf.keras.layers.Dense(units = 2024, activation ='relu')(x) 
-        output = tf.keras.layers.Dense(1)(x)
+        x = keras.layers.Flatten()(x) 
+        x = keras.layers.Dense(units = 4096, activation ='relu')(x) 
+        x = keras.layers.Dense(units = 2024, activation ='relu')(x) 
+        output = keras.layers.Dense(1)(x)
     elif head=='maxpool':
         # Per gridcell
-        x = tf.keras.layers.Conv2D(filters=512, kernel_size=1,
-                          kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
+        x = keras.layers.Conv2D(filters=512, kernel_size=1,
+                          kernel_regularizer=keras.regularizers.l2(l2_reg),
                           activation='relu')(x)
-        x = tf.keras.layers.Conv2D(filters=256, kernel_size=1,
-                          kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
+        x = keras.layers.Conv2D(filters=256, kernel_size=1,
+                          kernel_regularizer=keras.regularizers.l2(l2_reg),
                           activation='relu')(x)
-        x = tf.keras.layers.Conv2D(filters=1, kernel_size=1,name='heatmap')(x)
+        x = keras.layers.Conv2D(filters=1, kernel_size=1,name='heatmap')(x)
         # Max in scene
-        output = tf.keras.layers.GlobalMaxPooling2D()(x)
+        output = keras.layers.GlobalMaxPooling2D()(x)
         
-    return tf.keras.Model(inputs=inputs,outputs=output)
+    return keras.Model(inputs=inputs,outputs=output)
     
     
     
@@ -94,16 +94,16 @@ def vgg_block(x,c, filters=64, ksize=3, n_convs=2, l2_reg=1e-6, drop_rate=0.0):
     for _ in range(n_convs):
         x,c = CoordConv2D(filters=filters,
                           kernel_size=ksize,
-                          kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
+                          kernel_regularizer=keras.regularizers.l2(l2_reg),
                           padding='same',
                           activation='relu')([x,c])
-    x = tf.keras.layers.MaxPool2D(pool_size =2, strides =2, padding ='same')(x)
-    c = tf.keras.layers.MaxPool2D(pool_size =2, strides =2, padding ='same')(c)
+    x = keras.layers.MaxPool2D(pool_size =2, strides =2, padding ='same')(x)
+    c = keras.layers.MaxPool2D(pool_size =2, strides =2, padding ='same')(c)
     if drop_rate>0:
-        x = tf.keras.layers.Dropout(rate=drop_rate)(x)
+        x = keras.layers.Dropout(rate=drop_rate)(x)
     return x,c
     
-def normalize(x:tf.Tensor,
+def normalize(x,
               name:str):
     """
     Channel-wise normalization using known CHANNEL_MIN_MAX
@@ -118,7 +118,7 @@ def normalize(x:tf.Tensor,
     offset=(min_max[0]+min_max[1])/2    # scalar
     offset=np.array(n_sweeps*[offset,]) # [n_sweeps,]
 
-    return tf.keras.layers.Normalization(mean=offset,
+    return keras.layers.Normalization(mean=offset,
                                          variance=var,
                                          name='Normalize_%s' % name)(x)
 
