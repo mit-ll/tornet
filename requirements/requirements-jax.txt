@@ -1,0 +1,5 @@
+# Jax with cuda support.
+jax[cuda12]
+flax
+
+-r requirements-common.txt

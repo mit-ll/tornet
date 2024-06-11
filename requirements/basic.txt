@@ -1,9 +1,0 @@
-# Required to run basic loaders and visualization
-numpy
-matplotlib
-pandas
-xarray
-netCDF4
-tqdm
-glob2
-

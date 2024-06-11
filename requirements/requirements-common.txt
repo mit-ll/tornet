@@ -1,0 +1,33 @@
+# keras
+# https://github.com/keras-team/keras/blob/master/requirements-common.txt
+namex>=0.0.8
+black>=22
+keras>=3
+flake8
+isort
+pytest
+numpy
+scipy
+pandas
+absl-py
+requests
+h5py
+ml-dtypes
+protobuf
+google
+tensorboard-plugin-profile
+rich
+build
+optree
+pytest-cov
+packaging
+
+# tornet
+matplotlib
+xarray
+netCDF4
+tqdm
+glob2
+jupyter
+tensorflow_datasets
+tensorflow-cpu
