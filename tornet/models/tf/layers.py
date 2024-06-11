@@ -48,7 +48,7 @@ class CoordConv2D(keras.layers.Layer):
         x, coords = inputs
         
         # Stack x with coordinates
-        x = ops.concat( (x,coords), axis=3)
+        x = ops.concatenate( (x,coords), axis=3)
         
         # Run convolution
         conv=self.conv(x)
