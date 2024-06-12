@@ -36,13 +36,40 @@ The `tornet` package can then installed into your environment by running
 
 `pip install .`
 
-in this repo.  To do ML with TorNet, additional installs may be necessary depending on library of choice.  See e.g., `requirements/tensorflow.txt`, `requirements/torch.txt`.
+In this repo.  To do ML with TorNet, additional installs may be necessary depending on library of choice.  See e.g., `requirements/tensorflow.txt`, `requirements/torch.txt`.
+
+### Conda
+
+If using conda
+
+```
+conda create -n keras-{backend} python=3.10
+conda activate keras-{backend}
+pip install -r requirements/{backend}.txt
+```
+
+Replace {backend} with tensorflow, torch or jax.
+
+
+**Note**: The tensorflow environment might not properly set up paths to cuda libraries 
+leading to the GPU not being registered. See requirements/fix_cuda_paths.sh for 
+fix. 
 
 ## Loading and visualizing TorNet
 
 Start with `notebooks/DataLoaders.ipynb` to get an overview on loading and visualizing the dataset.
 
 ## Train CNN baseline model
+
+### Multiple backend support with Keras 3
+The model uses Keras 3 which supports multiple backends. The environment variable
+KERAS_BACKEND can be used to choose the backend. 
+
+```
+export KERAS_BACKEND=tensorflow
+# export KERAS_BACKEND=torch
+# export KERAS_BACKEND=jax
+```
 
 The following trains the CNN baseline model described in the paper using `tensorflow`.  If you run this out-of-the-box, it will run very slowly because it uses the basic dataloader.  Read the DataLoader notebook for tips on how to optimize the data loader.
 ```
