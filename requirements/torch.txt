@@ -5,4 +5,5 @@ torchvision==0.17.1+cu121
 torchmetrics
 lightning
 
--r requirements-common.txt
+-r basic.txt
+-r keras.txt

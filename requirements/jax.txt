@@ -2,4 +2,5 @@
 jax[cuda12]
 flax
 
--r requirements-common.txt
+-r basic.txt
+-r keras.txt

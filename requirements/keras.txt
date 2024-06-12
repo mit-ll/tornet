@@ -1,4 +1,3 @@
-# keras
 # https://github.com/keras-team/keras/blob/master/requirements-common.txt
 namex>=0.0.8
 black>=22
@@ -21,13 +20,5 @@ build
 optree
 pytest-cov
 packaging
-
-# tornet
-matplotlib
-xarray
-netCDF4
-tqdm
-glob2
-jupyter
 tensorflow_datasets
 tensorflow-cpu

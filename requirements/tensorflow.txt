@@ -1,4 +1,5 @@
 # Tensorflow with cuda support.
 tensorflow[and-cuda]~=2.16.1  # Pin to TF 2.16
 
--r requirements-common.txt
+-r basic.txt
+-r keras.txt

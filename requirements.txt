@@ -1,1 +1,1 @@
--r requirements/requirements-jax.txt
+-r requirements/basic.txt
