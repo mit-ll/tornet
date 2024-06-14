@@ -14,8 +14,7 @@ Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part
 from typing import Dict, List, Tuple
 import numpy as np
 import keras
-from keras import ops
-from tornet.models.tf.layers import CoordConv2D
+from tornet.models.tf.layers import CoordConv2D, FillNaNs
 from tornet.data.constants import CHANNEL_MIN_MAX, ALL_VARIABLES
 
 
@@ -39,10 +38,8 @@ def build_model(shape:Tuple[int]=(120,240,2),
         )
 
     # Replace nan pixel with background flag
-    normalized_inputs = keras.layers.Lambda( 
-            lambda x: ops.where(ops.isnan(x),background_flag,x)
-                        )(normalized_inputs)
-                            
+    normalized_inputs = FillNaNs(background_flag)(normalized_inputs)
+
     # Add channel for range folded gates 
     if include_range_folded:
         range_folded = keras.Input(shape[:2]+(n_sweeps,),name='range_folded_mask')
