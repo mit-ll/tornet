@@ -42,7 +42,7 @@ def main():
     # Compute various metrics
     from_logits=True
     metrics = [tfm.AUC(from_logits,name='AUC'),
-                tfm.AUC(from_logits,curve='PR',name='AUCPR'), # similar (but not identical) to AUC-PD in paper
+                tfm.AUC(from_logits,curve='PR',name='AUCPR'), 
                 tfm.BinaryAccuracy(from_logits,name='BinaryAccuracy'), 
                 tfm.Precision(from_logits,name='Precision'), 
                 tfm.Recall(from_logits,name='Recall'),

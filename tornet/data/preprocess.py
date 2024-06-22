@@ -21,9 +21,20 @@ def get_shape(d):
     # use whatever variable is available
     k = list(set(d.keys()) & set(ALL_VARIABLES)) # assumes this is non-empty!
     return d[k[0]].shape
-    
-    
+
+
 def add_coordinates(d,min_range_m=2125.0,
+                    include_az=True,
+                    tilt_last=True,
+                    backend=np):
+    c=compute_coordinates(d,min_range_m=min_range_m,
+                    include_az=include_az,
+                    tilt_last=tilt_last,
+                    backend=backend)
+    d['coordinates']=c
+    return d
+
+def compute_coordinates(d,min_range_m=2125.0,
                     include_az=True,
                     tilt_last=True,
                     backend=np):
@@ -71,8 +82,8 @@ def add_coordinates(d,min_range_m=2125.0,
         c = backend.stack( (R,A,Rinv), axis=cat_axis )
     else:
         c = backend.stack( (R,Rinv), axis=cat_axis )
-    d['coordinates']=c
-    return d
+    return c
+    
 
 def remove_time_dim(d):
     """

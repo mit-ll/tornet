@@ -51,11 +51,11 @@ def read_file(f: str,
         # Various numeric metadata
         data['range_folded_mask'] = ds['range_folded_mask'].values[-n_frames:,:,:,:].astype(np.float32) # only two channels for vel,width
         data['label'] = ds['frame_labels'].values[-n_frames:] # 1 if tornado, 0 otherwise
-        data['category']=np.array([{'TOR':0,'NUL':1,'WRN':2}[ds.attrs['category']]]) # tornadic, null (random), or warning
-        data['event_id']=np.array([int(ds.attrs['event_id'])])
-        data['ef_number']=np.array([int(ds.attrs['ef_number'])])
+        data['category']=np.array([{'TOR':0,'NUL':1,'WRN':2}[ds.attrs['category']]],dtype=np.int64) # tornadic, null (random), or warning
+        data['event_id']=np.array([int(ds.attrs['event_id'])],dtype=np.int64)
+        data['ef_number']=np.array([int(ds.attrs['ef_number'])],dtype=np.int64)
         data['az_lower']=np.array(ds['azimuth_limits'].values[0:1])
-        data['az_upper']=np.array(ds['azimuth_limits'].values[1:])
+        data['az_upper']=np.array(ds['azimuth_limits'].values[1:]) 
         data['rng_lower']=np.array(ds['range_limits'].values[0:1])
         data['rng_upper']=np.array(ds['range_limits'].values[1:])
         data['time']=(ds.time.values[-n_frames:].astype(np.int64)/1e9).astype(np.int64)
