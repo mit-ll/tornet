@@ -43,8 +43,8 @@ In this repo.  To do ML with TorNet, additional installs may be necessary depend
 If using conda
 
 ```
-conda create -n keras-{backend} python=3.10
-conda activate keras-{backend}
+conda create -n tornet-{backend} python=3.10
+conda activate tornet-{backend}
 pip install -r requirements/{backend}.txt
 ```
 

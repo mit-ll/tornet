@@ -1,5 +1,10 @@
-# Tensorflow with cuda support.
-tensorflow[and-cuda]~=2.16.1  # Pin to TF 2.16
+# Keras 3.0
+keras>=3.0, <=3.3
+
+# Data loading
+tensorflow-datasets
+
+# Tensorflow with cuda support
+tensorflow[and-cuda]~=2.16.1
 
 -r basic.txt
--r keras.txt
