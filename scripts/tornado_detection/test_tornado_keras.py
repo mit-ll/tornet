@@ -16,6 +16,7 @@ import os
 import numpy as np
 import pandas as pd
 import keras
+import tqdm
 
 from tornet.data.tf.loader import make_ds
 from tornet.metrics.keras import metrics as tfm
@@ -45,23 +46,29 @@ def main():
                       batch_size=64,
                       filter_warnings=FILTER_WARNINGS,
                       include_az=False,
-                      from_tfds=from_tfds)   
+                      from_tfds=from_tfds)  
     
     model = keras.saving.load_model(trained_model,compile=False)
+    
+    # limit dataset to only required model inputs
+    ds_test = ds_test.map(\
+        lambda x,y: ({k:x[k] for k in [i.name for i in model.inputs]},y)
+        )
 
     # Compute various metrics
     from_logits=True
-    metrics = [tfm.AUC(from_logits,name='AUC'),
-                tfm.AUC(from_logits,curve='PR',name='AUCPR'), 
-                tfm.BinaryAccuracy(from_logits,name='BinaryAccuracy'), 
-                tfm.Precision(from_logits,name='Precision'), 
-                tfm.Recall(from_logits,name='Recall'),
+    metrics = [ keras.metrics.AUC(from_logits=from_logits,name='AUC',num_thresholds=2000),
+                keras.metrics.AUC(from_logits=from_logits,curve='PR',name='AUCPR',num_thresholds=2000), 
+                tfm.BinaryAccuracy(from_logits=from_logits,name='BinaryAccuracy'), 
+                tfm.Precision(from_logits=from_logits,name='Precision'), 
+                tfm.Recall(from_logits=from_logits,name='Recall'),
                 tfm.F1Score(from_logits=from_logits,name='F1')]
     model.compile(metrics=metrics)
 
-    scores = model.evaluate(ds_test)
-    scores = {m:s for m,s in zip(model.metrics_names,scores)}
-    print(scores)
+    scores = model.evaluate(ds_test) 
+    scores = {m.name:scores[k+1] for k,m in enumerate(metrics)}
+
+    logging.info(scores)
 
  
 if __name__=='__main__':
