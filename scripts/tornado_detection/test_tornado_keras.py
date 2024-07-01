@@ -10,44 +10,47 @@ The software/firmware is provided to you on an As-Is basis
 Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part 252.227-7013 or 7014 (Feb 2014). Notwithstanding any copyright notice, U.S. Government rights in this work are defined by DFARS 252.227-7013 or DFARS 252.227-7014 as detailed above. Use of this work other than as specifically authorized by the U.S. Government may violate any copyrights that exist in this work.
 """
 
-import sys
-
 import os
-import numpy as np
-import pandas as pd
 import keras
 import tqdm
 
-from tornet.data.tf.loader import make_ds
+from tornet.data.loader import get_dataloader
 from tornet.metrics.keras import metrics as tfm
 
+import argparse
 import logging
 logging.basicConfig(level=logging.INFO)
 
 data_root=os.environ['TORNET_ROOT']
 logging.info('TORNET_ROOT='+data_root)
 
-# Assume we are using tfds if TFDS_DATA_DIR is defined
-from_tfds=('TFDS_DATA_DIR' in os.environ)
-if from_tfds:
-    logging.info('Using TFDS dataset location at '+os.environ['TFDS_DATA_DIR'])
-
 FILTER_WARNINGS=False
 
 def main():
 
-    trained_model = sys.argv[1]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_path",help="Pretrained model to test (.keras)")
+    parser.add_argument(
+        "--dataloader",
+        help='Which data loader to use for loading test data',
+        default="keras",
+        choices=["keras", "tensorflow", "tensorflow-tfds", "torch", "torch-tfds"],
+    )
+    args = parser.parse_args()
 
-    ## Set up data loaders
+    trained_model = args.model_path
+    dataloader = args.dataloader
+
+    print(f"Using {keras.config.backend()} backend")
+    print(f"Using {dataloader} dataloader")
+
+    if ("tfds" in dataloader) and ('TFDS_DATA_DIR' in os.environ):
+        logging.info('Using TFDS dataset location at '+os.environ['TFDS_DATA_DIR'])
+
+    ## Set up data loader
     test_years = range(2013,2023)
-    ds_test = make_ds(data_root,
-                      data_type='test',
-                      years=test_years,
-                      batch_size=64,
-                      filter_warnings=FILTER_WARNINGS,
-                      include_az=False,
-                      from_tfds=from_tfds)  
-    
+    ds_test = get_dataloader(dataloader, data_root, test_years, "test", 64)
+
     model = keras.saving.load_model(trained_model,compile=False)
     
     # limit dataset to only required model inputs

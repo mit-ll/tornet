@@ -17,5 +17,6 @@
     "loss":"cce",
     "head":"maxpool",
     "exp_name":"tornado_baseline",
-    "filter_warnings":false
+    "filter_warnings":false,
+    "dataloader":"keras"
 }
