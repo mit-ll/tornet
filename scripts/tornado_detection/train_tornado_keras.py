@@ -153,8 +153,8 @@ def main(config):
     opt  = keras.optimizers.Adam(learning_rate=lr)
 
     # Compute various metrics while training
-    metrics = [tfm.AUC(from_logits,name='AUC'),
-                tfm.AUC(from_logits,curve='PR',name='AUCPR'),
+    metrics = [keras.metrics.AUC(from_logits=from_logits,name='AUC',num_thresholds=2000),
+                keras.metrics.AUC(from_logits=from_logits,curve='PR',name='AUCPR',num_thresholds=2000), 
                 tfm.BinaryAccuracy(from_logits,name='BinaryAccuracy'), 
                 tfm.TruePositives(from_logits,name='TruePositives'),
                 tfm.FalsePositives(from_logits,name='FalsePositives'), 
