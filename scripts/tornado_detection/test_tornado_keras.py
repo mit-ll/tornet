@@ -29,7 +29,8 @@ FILTER_WARNINGS=False
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_path",help="Pretrained model to test (.keras)")
+    parser.add_argument("--model_path",
+                        help="Pretrained model to test (.keras)")
     parser.add_argument(
         "--dataloader",
         help='Which data loader to use for loading test data',
