@@ -1,10 +1,6 @@
 # Keras 3.0
 keras>=3.0, <=3.3
 
-# Data loading
-tensorflow
-tensorflow-datasets
-
 # Jax with cuda support
 jax[cuda12]
 flax

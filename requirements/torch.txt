@@ -1,10 +1,6 @@
 # Keras 3.0
 keras>=3.0, <=3.3
 
-# Data loading
-tensorflow
-tensorflow-datasets
-
 # Torch with cuda support
 --extra-index-url https://download.pytorch.org/whl/cu121
 torch==2.2.1+cu121
