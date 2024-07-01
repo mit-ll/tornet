@@ -11,7 +11,7 @@ Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part
 """
 from typing import Dict
 import numpy as np
-from tornet.data.constants import CHANNEL_MIN_MAX, ALL_VARIABLES
+from tornet.data.constants import ALL_VARIABLES
 
 
 def get_shape(d):
@@ -68,8 +68,8 @@ def compute_coordinates(d,min_range_m=2125.0,
     az_upper = (90-az_upper) * np.pi/180 # [1,]
     
     # create mesh grids 
-    az = backend.linspace( az_lower[0],  az_upper[0], shape[0] )
-    rg = backend.linspace( rng_lower[0], rng_upper[0], shape[1] )
+    az = backend.linspace( az_lower,  az_upper, shape[0] )
+    rg = backend.linspace( rng_lower, rng_upper, shape[1] )
     R,A = backend.meshgrid(rg,az,indexing='xy')
 
     # limit to minimum range of radar
@@ -89,9 +89,8 @@ def remove_time_dim(d):
     """
     Removes time dimension from data by taking last available frame
     """
-    for v in ALL_VARIABLES+['range_folded_mask','label']:
-        if v in d:
-            d[v]=d[v][-1]
+    for v in d:
+        d[v] = d[v][-1]
     return d
 
 def add_batch_dim(data: Dict[str,np.ndarray]):
@@ -111,3 +110,36 @@ def permute_dims(data: Dict[str,np.ndarray], order:tuple):
         if data[v].ndim==len(order):
             data[v]=np.transpose(data[v],order)
     return data
+
+def split_x_y(d : Dict[str,np.ndarray]):
+    """
+    Splits dict into X,y, where y are tornado labels
+    """
+    y=d['label']
+    return d,y
+
+
+def compute_sample_weight(x,y,wN=1.0,w0=1.0,w1=1.0,w2=1.0,wW=0.5, backend=np):
+    """
+    Assigns sample weights to samples in x,y based on
+    ef_number of tornado
+    
+    category,  weight
+    -----------
+    random      wN
+    warnings    wW
+    0           w0
+    1           w1
+    2+          w2
+    """
+    weights = backend.ones_like(y, dtype=float)
+    ef = x['ef_number']
+    warn = x['category'] == 2  # warnings
+
+    weights = backend.where( ef==-1, wN, weights ) # set all nulls to wN
+    weights = backend.where( warn,   wW, weights ) # set warns to wW
+    weights = backend.where( ef==0,  w0, weights )
+    weights = backend.where( ef==1,  w1, weights )
+    weights = backend.where( ef>1,   w2, weights )
+
+    return x,y,weights

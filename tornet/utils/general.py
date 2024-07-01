@@ -17,10 +17,6 @@ Utils for importing modules from string
 
 import os
 import datetime
-import importlib
-
-import tensorflow as tf
-
 
 
 def make_exp_dir(exp_dir='../experiments',prefix='',symlink_name='latest',
@@ -36,7 +32,7 @@ def make_exp_dir(exp_dir='../experiments',prefix='',symlink_name='latest',
         dated_dir = os.path.join(os.getenv('SLURM_ARRAY_JOB_ID'),dated_dir)
     except:
         pass
-    tf.io.gfile.makedirs(os.path.join(exp_dir,dated_dir))
+    os.makedirs(os.path.join(exp_dir,dated_dir))
     if os.path.islink(linked_dir):
         os.unlink(linked_dir)
     os.symlink(dated_dir,linked_dir)

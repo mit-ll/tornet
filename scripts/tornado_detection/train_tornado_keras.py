@@ -15,14 +15,13 @@ import os
 import numpy as np
 import json
 import shutil
-import tensorflow as tf
 import keras
 
 import logging
 logging.basicConfig(level=logging.INFO)
 
+from tornet.data.loader import get_dataloader
 from tornet.data.preprocess import get_shape
-from tornet.data.tf.loader import make_ds
 from tornet.data.constants import ALL_VARIABLES
 
 from tornet.models.keras.losses import mae_loss
@@ -36,10 +35,6 @@ from tornet.utils.general import make_exp_dir, make_callback_dirs
 EXP_DIR=os.environ.get('EXP_DIR','.')
 DATA_ROOT=os.environ['TORNET_ROOT']
 logging.info('TORNET_ROOT='+DATA_ROOT)
-
-# Assume we are using tfds if TFDS_DATA_DIR is defined
-from_tfds=('TFDS_DATA_DIR' in os.environ)
-
 
 DEFAULT_CONFIG={
     'epochs':10,
@@ -64,11 +59,10 @@ DEFAULT_CONFIG={
     'filter_warnings':False,
     'filter_ef0':False,
     'exp_name':'tornet_baseline',
-    'exp_dir':EXP_DIR
+    'exp_dir':EXP_DIR,
+    'dataloader':"keras",
+    'dataloader_kwargs': {}
 }
-
-data_opts = tf.data.Options()
-data_opts.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
 
 def main(config):
     # Gather all hyperparams
@@ -93,33 +87,19 @@ def main(config):
     exp_dir=config.get('exp_dir')
     train_years=config.get('train_years')
     val_years=config.get('val_years')
+    dataloader=config.get('dataloader')
+    dataloader_kwargs = config.get('dataloader_kwargs')
 
-
+    logging.info(f"Using {keras.config.backend()} backend")
+    logging.info(f'Using {dataloader} dataloader')
     logging.info('Running with config:')
     logging.info(config)
-    
-    ## Set up data loaders
+
     weights={'wN':wN,'w0':w0,'w1':w1,'w2':w2,'wW':wW}
-    ds_train = make_ds(DATA_ROOT,
-                       'train',
-                       train_years,
-                       batch_size=batch_size,
-                       weights=weights,
-                       filter_warnings=filter_warn,
-                       include_az=False,
-                       from_tfds=from_tfds)
 
-    ds_val = make_ds(DATA_ROOT,
-                     'train',
-                     val_years,
-                     batch_size=batch_size,
-                     weights=weights,
-                     filter_warnings=filter_warn,
-                     include_az=False,
-                     from_tfds=from_tfds)
+    ds_train = get_dataloader(dataloader, DATA_ROOT, train_years, "train", batch_size, weights, **dataloader_kwargs)
+    ds_val = get_dataloader(dataloader, DATA_ROOT, val_years, "train", batch_size, weights, **dataloader_kwargs)
 
-    ds_train=ds_train.with_options(data_opts)
-    ds_val=ds_val.with_options(data_opts)
 
     ## Set up model
     for x,y,w in ds_train:
@@ -188,13 +168,15 @@ def main(config):
     tboard_dir, checkpoints_dir=make_callback_dirs(expdir)
     checkpoint_name=os.path.join(checkpoints_dir, 'tornadoDetector'+'_{epoch:03d}.keras' )
     
-    callbacks=[]
-    callbacks += [
+    callbacks = [
         keras.callbacks.ModelCheckpoint(checkpoint_name,monitor='val_loss',save_best_only=False),
         keras.callbacks.CSVLogger(os.path.join(expdir,'history.csv')),
-        keras.callbacks.TensorBoard(log_dir=tboard_dir,write_graph=False),#,profile_batch=(5,15)),
         keras.callbacks.TerminateOnNaN(),
     ]
+
+    # TensorBoard callback requires tensorflow backend
+    if keras.config.backend() == "tensorflow":
+        callbacks.append(keras.callbacks.TensorBoard(log_dir=tboard_dir,write_graph=False))#,profile_batch=(5,15)),
 
     ## FIT
     history=nn.fit(ds_train,
@@ -214,7 +196,6 @@ def main(config):
 
 
 if __name__=='__main__':
-    print(f"Using {keras.config.backend()} backend")
     config=DEFAULT_CONFIG
     # Load param file if given
     if len(sys.argv)>1:
