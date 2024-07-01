@@ -125,6 +125,7 @@ def main(config):
     for x,y,w in ds_train:
         shp=get_shape(x)
         c_shp=x['coordinates'].shape
+        break
     in_shapes = (None,None,shp[-1])
     c_shapes = (None,None,c_shp[-1])
     
@@ -134,7 +135,6 @@ def main(config):
                      l2_reg=l2_reg,
                      input_variables=input_variables,
                      head=head)
-
     lr=keras.optimizers.schedules.ExponentialDecay(
                 learning_rate, decay_steps, decay_rate, staircase=False, name="exp_decay")
     
