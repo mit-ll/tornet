@@ -56,7 +56,6 @@ DEFAULT_CONFIG={
     'label_smooth':0,
     'loss':'cce',
     'head':'maxpool',
-    'filter_ef0':False,
     'exp_name':'tornet_baseline',
     'exp_dir':EXP_DIR,
     'dataloader':"keras",
@@ -96,8 +95,8 @@ def main(config):
     weights={'wN':wN,'w0':w0,'w1':w1,'w2':w2,'wW':wW}
     
     # Create data laoders
-    dataloader_kwargs = {'select_keys':input_variables+['range_folded_mask','coordinates'],
-                         'use_multiprocessing':False}
+    dataloader_kwargs = {'select_keys':input_variables+['range_folded_mask','coordinates']}
+                        #  'use_multiprocessing':False}
     ds_train = get_dataloader(dataloader, DATA_ROOT, train_years, "train", batch_size, weights, **dataloader_kwargs)
     ds_val = get_dataloader(dataloader, DATA_ROOT, val_years, "train", batch_size, weights, **dataloader_kwargs)    
     
