@@ -30,7 +30,8 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path",
-                        help="Pretrained model to test (.keras)")
+                        help="Pretrained model to test (.keras)",
+                        default=None)
     parser.add_argument(
         "--dataloader",
         help='Which data loader to use for loading test data',
@@ -40,6 +41,15 @@ def main():
     args = parser.parse_args()
 
     trained_model = args.model_path
+    if trained_model is None:
+        # download model from hugging face
+        # alternatively, you can manually download the file
+        # from https://huggingface.co/tornet-ml/tornado_detector_baseline_v1
+        # and point to it using --model_path
+        from huggingface_hub import hf_hub_download
+        trained_model = hf_hub_download(repo_id="tornet-ml/tornado_detector_baseline_v1", 
+                                        filename="tornado_detector_baseline.keras")
+        
     dataloader = args.dataloader
 
     print(f"Using {keras.config.backend()} backend")
@@ -47,17 +57,19 @@ def main():
 
     if ("tfds" in dataloader) and ('TFDS_DATA_DIR' in os.environ):
         logging.info('Using TFDS dataset location at '+os.environ['TFDS_DATA_DIR'])
+    
+    # load model
+    model = keras.saving.load_model(trained_model,compile=False)
 
     ## Set up data loader
     test_years = range(2013,2023)
-    ds_test = get_dataloader(dataloader, data_root, test_years, "test", 64)
+    ds_test = get_dataloader(dataloader, 
+                             data_root, 
+                             test_years, 
+                             "test", 
+                             64,
+                             select_keys=list(model.input.keys()))
 
-    model = keras.saving.load_model(trained_model,compile=False)
-    
-    # limit dataset to only required model inputs
-    ds_test = ds_test.map(\
-        lambda x,y: ({k:x[k] for k in [i.name for i in model.inputs]},y)
-        )
 
     # Compute various metrics
     from_logits=True
