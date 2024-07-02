@@ -52,6 +52,7 @@ class KerasDataLoader(keras.utils.PyDataset):
         workers: int = 0,
         use_multiprocessing: bool = True,
         max_queue_size: int = 10,
+        select_keys: list=None
     ):
         """
         data_root - location of TorNet
@@ -80,6 +81,7 @@ class KerasDataLoader(keras.utils.PyDataset):
         self.weights = weights
         self.include_az = include_az
         self.random_state = random_state
+        self.select_keys=select_keys
 
         self.file_list = query_catalog(data_root, data_type, 
                                        years, random_state,
@@ -112,8 +114,14 @@ class KerasDataLoader(keras.utils.PyDataset):
         batch = {}
         for key in element_list[0].keys():
             batch[key] = np.concatenate([el[key] for el in element_list])
-
+        
+        # split into x,y
         x, y = pp.split_x_y(batch)
+
+        # select keys for input
+        if self.select_keys is not None:
+            x,y = pp.select_keys(x,y,keys=self.select_keys)
+
         if self.weights:
             x, y, w = pp.compute_sample_weight(x, y, **self.weights, backend=np)
             return x, y, w
