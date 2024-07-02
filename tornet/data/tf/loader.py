@@ -87,7 +87,6 @@ def make_tf_loader(data_root: str,
             include_az: bool=False,
             random_state:int=1234,
             from_tfds: bool=False,
-            filter_warnings: bool=False,
             select_keys: list=None,
             tfds_data_version: str='1.1.0'):
     """
@@ -104,7 +103,6 @@ def make_tf_loader(data_root: str,
                 built and TFDS_DATA_ROOT to be set.  
                 See tornet/data/tdfs/tornet/README.
                 If False (default), the basic loader is used
-    filter_warnings - if True, filters warning samples
     select_keys - Only generate a subset of keys from each tornet sample
     
     If you leave from_tfds as False, I suggest adding ds=ds.cache( LOCATION ) 
@@ -118,7 +116,6 @@ def make_tf_loader(data_root: str,
     ef0, ef1, ef2+ and warnings samples, respectively.  
 
     After loading TorNet samples, this does the following preprocessing:
-    - optinally filters out warning samples (if filter_warnings is True)
     - adds 'coordinates' variable used by CoordConv layers. If include_az is True, this
       includes r, r^{-1} (and az if include_az is True)
     - Takes only last time frame
@@ -134,21 +131,18 @@ def make_tf_loader(data_root: str,
         file_list = query_catalog(data_root, data_type, years, random_state)
         ds = create_tf_dataset(file_list,variables=ALL_VARIABLES,n_frames=1) 
 
-    ds=preproc(ds,weights,filter_warnings,include_az,select_keys)
+    ds=preproc(ds,weights,include_az,select_keys)
     ds = ds.prefetch(tf.data.AUTOTUNE)
     ds = ds.batch(batch_size)
     return ds
 
 def preproc(ds: tf.data.Dataset,
             weights:Dict=None,
-            filter_warnings:bool=False,
             include_az:bool=False,
             select_keys:list=None):
     """
     Adds preprocessing steps onto dataloader
     """
-    if filter_warnings:
-        ds = ds.filter( lambda d: d['category'][0]!=2 )
 
     # Remove time dimesnion
     ds = ds.map(pp.remove_time_dim)

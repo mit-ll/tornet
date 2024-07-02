@@ -24,8 +24,6 @@ logging.basicConfig(level=logging.INFO)
 data_root=os.environ['TORNET_ROOT']
 logging.info('TORNET_ROOT='+data_root)
 
-FILTER_WARNINGS=False
-
 def main():
 
     parser = argparse.ArgumentParser()

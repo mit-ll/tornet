@@ -56,7 +56,6 @@ DEFAULT_CONFIG={
     'label_smooth':0,
     'loss':'cce',
     'head':'maxpool',
-    'filter_warnings':False,
     'filter_ef0':False,
     'exp_name':'tornet_baseline',
     'exp_dir':EXP_DIR,
@@ -81,7 +80,6 @@ def main(config):
     head=config.get('head')
     label_smooth=config.get('label_smooth')
     loss_fn = config.get('loss')
-    filter_warn=config.get('filter_warnings')
     input_variables=config.get('input_variables')
     exp_name=config.get('exp_name')
     exp_dir=config.get('exp_dir')
