@@ -118,12 +118,8 @@ class KerasDataLoader(keras.utils.PyDataset):
         # split into x,y
         x, y = pp.split_x_y(batch)
 
-        # select keys for input
-        if self.select_keys is not None:
-            x,y = pp.select_keys(x,y,keys=self.select_keys)
-
         if self.weights:
             x, y, w = pp.compute_sample_weight(x, y, **self.weights, backend=np)
-            return x, y, w
+            return pp.select_keys(x,keys=self.select_keys),y,w
         else:
-            return x, y
+            return pp.select_keys(x,keys=self.select_keys), y

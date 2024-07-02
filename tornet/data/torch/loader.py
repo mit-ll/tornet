@@ -85,14 +85,14 @@ def make_torch_loader(data_root: str,
             lambda d: pp.add_coordinates(d, include_az=include_az, tilt_last=tilt_last, backend=torch),
             lambda d: pp.split_x_y(d)
         )
-        
-        if select_keys is not None:
-            transforms_list.append(
-                lambda xy: pp.select_keys(*xy,keys=select_keys)
-            )
 
         if weights:
             transform_list.append(lambda xy: pp.compute_sample_weight(*xy, **weights, backend=torch))
+        
+        if select_keys is not None:
+            transforms_list.append(
+                lambda xy: pp.select_keys(xy[0],keys=select_keys)+xy[1:]
+            )
             
          # Dataset, with preprocessing
         transform = transforms.Compose(transforms_list)
@@ -112,6 +112,11 @@ def make_torch_loader(data_root: str,
 
         if weights:
             transform_list.append(lambda xy: pp.compute_sample_weight(*xy, **weights, backend=torch))
+        
+        if select_keys is not None:
+            transforms_list.append(
+                lambda xy: pp.select_keys(xy[0],keys=select_keys)+xy[1:]
+            )
 
         # Dataset, with preprocessing
         transform = transforms.Compose(transform_list)

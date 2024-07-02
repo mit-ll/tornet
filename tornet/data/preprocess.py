@@ -102,12 +102,14 @@ def add_batch_dim(data: Dict[str,np.ndarray]):
     return data
 
 def select_keys(x: Dict[str,np.ndarray], 
-                y: np.ndarray,  
-                keys: List[str]):
+                keys: List[str]=None):
     """
     Selects list of keys from input data
     """
-    return {k:x[k] for k in keys},y
+    if keys:
+        return {k:x[k] for k in keys}
+    else:
+        return x
 
 def permute_dims(data: Dict[str,np.ndarray], order:tuple):
     """

@@ -159,12 +159,12 @@ def preproc(ds: tf.data.Dataset,
     # split into X,y
     ds = ds.map(pp.split_x_y)
 
-    # select keys for input
-    if select_keys is not None:
-        ds = ds.map(lambda x,y: pp.select_keys(x,y,keys=select_keys))
-
-
     # Add sample weights
     if weights:
         ds = ds.map(lambda x,y:  pp.compute_sample_weight(x,y,**weights, backend=tf) )
+    
+    # select keys for input
+    if select_keys is not None:
+        ds = ds.map(lambda xy: (pp.select_keys(xy[0],keys=select_keys)+xy[1:]))
+
     return ds
