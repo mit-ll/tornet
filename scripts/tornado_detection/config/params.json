@@ -13,7 +13,7 @@
     "w1":1.0,
     "w2":2.0,
     "wW":0.5,
-    "label_smooth":0.1,
+    "label_smooth":0,
     "loss":"cce",
     "head":"maxpool",
     "exp_name":"tornado_baseline",
