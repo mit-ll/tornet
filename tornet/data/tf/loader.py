@@ -88,6 +88,7 @@ def make_tf_loader(data_root: str,
             random_state:int=1234,
             from_tfds: bool=False,
             filter_warnings: bool=False,
+            select_keys: list=None,
             tfds_data_version: str='1.1.0'):
     """
     Initializes tf.data Dataset for training CNN Tornet baseline.
@@ -104,6 +105,7 @@ def make_tf_loader(data_root: str,
                 See tornet/data/tdfs/tornet/README.
                 If False (default), the basic loader is used
     filter_warnings - if True, filters warning samples
+    select_keys - Only generate a subset of keys from each tornet sample
     
     If you leave from_tfds as False, I suggest adding ds=ds.cache( LOCATION ) 
     in the training script to cache the dataset to speed up training times (after epoch 1)
@@ -132,7 +134,7 @@ def make_tf_loader(data_root: str,
         file_list = query_catalog(data_root, data_type, years, random_state)
         ds = create_tf_dataset(file_list,variables=ALL_VARIABLES,n_frames=1) 
 
-    ds=preproc(ds,weights,filter_warnings,include_az)
+    ds=preproc(ds,weights,filter_warnings,include_az,select_keys)
     ds = ds.prefetch(tf.data.AUTOTUNE)
     ds = ds.batch(batch_size)
     return ds
@@ -140,7 +142,8 @@ def make_tf_loader(data_root: str,
 def preproc(ds: tf.data.Dataset,
             weights:Dict=None,
             filter_warnings:bool=False,
-            include_az:bool=False):
+            include_az:bool=False,
+            select_keys:list=None):
     """
     Adds preprocessing steps onto dataloader
     """
@@ -155,6 +158,11 @@ def preproc(ds: tf.data.Dataset,
 
     # split into X,y
     ds = ds.map(pp.split_x_y)
+
+    # select keys for input
+    if select_keys is not None:
+        ds = ds.map(lambda x,y: pp.select_keys(x,y,keys=select_keys))
+
 
     # Add sample weights
     if weights:
