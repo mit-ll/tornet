@@ -9,7 +9,7 @@ The software/firmware is provided to you on an As-Is basis
 
 Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part 252.227-7013 or 7014 (Feb 2014). Notwithstanding any copyright notice, U.S. Government rights in this work are defined by DFARS 252.227-7013 or DFARS 252.227-7014 as detailed above. Use of this work other than as specifically authorized by the U.S. Government may violate any copyrights that exist in this work.
 """
-from typing import Dict
+from typing import Dict, List
 import numpy as np
 from tornet.data.constants import ALL_VARIABLES
 
@@ -100,6 +100,14 @@ def add_batch_dim(data: Dict[str,np.ndarray]):
     for k in data:
         data[k] = data[k][None,...]
     return data
+
+def select_keys(x: Dict[str,np.ndarray], 
+                y: np.ndarray,  
+                keys: List[str]):
+    """
+    Selects list of keys from input data
+    """
+    return {k:x[k] for k in keys},y
 
 def permute_dims(data: Dict[str,np.ndarray], order:tuple):
     """
