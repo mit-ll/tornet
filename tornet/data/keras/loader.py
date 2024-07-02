@@ -17,6 +17,7 @@ from typing import Dict
 
 import keras
 import numpy as np
+import pandas as pd
 
 from tornet.data import preprocess as pp
 from tornet.data.constants import ALL_VARIABLES
@@ -43,6 +44,7 @@ class KerasDataLoader(keras.utils.PyDataset):
         data_root: str,
         data_type: str = "train",
         years: list = list(range(2013, 2023)),
+        catalog: pd.DataFrame=None,
         batch_size: int = 128,
         weights: Dict = None,
         include_az: bool = False,
@@ -55,6 +57,7 @@ class KerasDataLoader(keras.utils.PyDataset):
         data_root - location of TorNet
         data_Type - 'train' or 'test'
         years     - list of years btwn 2013 - 2022 to draw data from
+        catalog   - preloaded catalog (optional)
         batch_size - batch size
         weights - optional sample weights, see note below
         include_az - if True, coordinates also contains az field
@@ -78,7 +81,9 @@ class KerasDataLoader(keras.utils.PyDataset):
         self.include_az = include_az
         self.random_state = random_state
 
-        self.file_list = query_catalog(data_root, data_type, years, random_state)
+        self.file_list = query_catalog(data_root, data_type, 
+                                       years, random_state,
+                                       catalog=catalog)
 
     def __len__(self) -> int:
         "Returns number of batches"

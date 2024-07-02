@@ -63,7 +63,7 @@ def read_file(f: str,
         data['time']=(ds.time.values[-n_frames:].astype(np.int64)/1e9).astype(np.int64)
         
         # Store start/end times for tornado (Added in v1.1)
-        if ds.attrs['ef_number']>=0:
+        if ds.attrs['ef_number']>=0 and ('tornado_start_time' in ds.attrs):
             start_time=datetime.datetime.strptime(ds.attrs['tornado_start_time'],'%Y-%m-%d %H:%M:%S')
             end_time=datetime.datetime.strptime(ds.attrs['tornado_end_time'],'%Y-%m-%d %H:%M:%S')
             epoch = datetime.datetime(1970,1,1)
@@ -85,19 +85,27 @@ def read_file(f: str,
         
     return data
 
-def query_catalog(data_root: str, data_type: str, years: list[int], random_state: int) -> list[str]:
-    """Obtain file names that match criteria
+def query_catalog(data_root: str, 
+                  data_type: str, 
+                  years: list[int], 
+                  random_state: int,
+                  catalog: pd.DataFrame=None) -> list[str]:
+    """Obtain file names that match criteria.
+    If catalog is not provided, this loads and parses the 
+    default catalog.
 
     Inputs:
     data_root: location of data
     data_type: train or test 
     years: list of years btwn 2013 - 2022 to draw data from
     random_state: random seed for shuffling files
+    catalog:  Preloaded catalog, optional
     """
-    catalog_path = os.path.join(data_root,'catalog.csv')
-    if not os.path.exists(catalog_path):
-        raise RuntimeError('Unable to find catalog.csv at '+data_root)
-    catalog = pd.read_csv(catalog_path,parse_dates=['start_time','end_time'])
+    if catalog is None:
+        catalog_path = os.path.join(data_root,'catalog.csv')
+        if not os.path.exists(catalog_path):
+            raise RuntimeError('Unable to find catalog.csv at '+data_root)
+        catalog = pd.read_csv(catalog_path,parse_dates=['start_time','end_time'])
     catalog = catalog[catalog['type']==data_type]
     catalog = catalog[catalog.start_time.dt.year.isin(years)]
     catalog = catalog.sample(frac=1, random_state=random_state) # shuffle file list
