@@ -18,7 +18,7 @@ import keras
 
 from tornet.data.tf.loader import create_tf_dataset
 from tornet.data.constants import ALL_VARIABLES
-from tornet.data.tf import preprocess as pp 
+from tornet.data import preprocess as pp 
 from tornet.display.tboard import log_image
 
 class LogTornadoImage(keras.callbacks.Callback):
