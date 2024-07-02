@@ -96,25 +96,23 @@ def main(config):
     logging.info(config)
 
     weights={'wN':wN,'w0':w0,'w1':w1,'w2':w2,'wW':wW}
-
-    ds_train = get_dataloader(dataloader, DATA_ROOT, train_years, "train", batch_size, weights, **dataloader_kwargs)
-    ds_val = get_dataloader(dataloader, DATA_ROOT, val_years, "train", batch_size, weights, **dataloader_kwargs)
-
-
-    ## Set up model
-    for x,y,w in ds_train:
-        shp=get_shape(x)
-        c_shp=x['coordinates'].shape
-        break
-    in_shapes = (None,None,shp[-1])
-    c_shapes = (None,None,c_shp[-1])
     
+    # Create data laoders
+    dataloader_kwargs = {'select_keys':input_variables+['range_folded_mask','coordinates'],
+                         'use_multiprocessing':False}
+    ds_train = get_dataloader(dataloader, DATA_ROOT, train_years, "train", batch_size, weights, **dataloader_kwargs)
+    ds_val = get_dataloader(dataloader, DATA_ROOT, val_years, "train", batch_size, weights, **dataloader_kwargs)    
+    
+    in_shapes = (None,None,2)
+    c_shapes = (None,None,2)
     nn = build_model(shape=in_shapes,
                      c_shape=c_shapes,
                      start_filters=start_filters,
                      l2_reg=l2_reg,
                      input_variables=input_variables,
                      head=head)
+    
+    # model setup
     lr=keras.optimizers.schedules.ExponentialDecay(
                 learning_rate, decay_steps, decay_rate, staircase=False, name="exp_decay")
     
