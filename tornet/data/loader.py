@@ -225,6 +225,10 @@ def get_dataloader(
         ds = make_torch_loader(data_root,data_type,years,batch_size,weights,from_tfds=from_tfds,**kwargs)
     else:
         from tornet.data.keras.loader import KerasDataLoader
-        ds = KerasDataLoader(data_root,data_type,years,batch_size,weights,**kwargs)
+        ds = KerasDataLoader(data_root=data_root,
+                             data_type=data_type,
+                             years=years,
+                             batch_size=batch_size,
+                             weights=weights,**kwargs)
 
     return ds
