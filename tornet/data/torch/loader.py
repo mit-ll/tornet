@@ -36,7 +36,8 @@ def make_torch_loader(data_root: str,
                 random_state:int=1234,
                 workers:int=8,
                 tilt_last: bool=True,
-                from_tfds: bool=False):
+                from_tfds: bool=False,
+                select_keys: list=None):
     """
     Initializes torch.utils.data.DataLoader for training CNN Tornet baseline.
 
@@ -54,6 +55,7 @@ def make_torch_loader(data_root: str,
                 built and TFDS_DATA_ROOT to be set.  
                 See tornet/data/tdfs/tornet/README.
                 If False (default), the basic loader is used
+    select_keys - Only generate a subset of keys from each tornet sample
 
     weights is optional, if provided must be a dict of the form
       weights={'wN':wN,'w0':w0,'w1':w1,'w2':w2,'wW':wW}
@@ -81,8 +83,13 @@ def make_torch_loader(data_root: str,
         transforms_list.append(
             lambda d: pp.remove_time_dim(d),
             lambda d: pp.add_coordinates(d, include_az=include_az, tilt_last=tilt_last, backend=torch),
-            lambda d: pp.split_x_y(d),
+            lambda d: pp.split_x_y(d)
         )
+        
+        if select_keys is not None:
+            transforms_list.append(
+                lambda xy: pp.select_keys(*xy,keys=select_keys)
+            )
 
         if weights:
             transform_list.append(lambda xy: pp.compute_sample_weight(*xy, **weights, backend=torch))
