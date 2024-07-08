@@ -36,7 +36,9 @@ The `tornet` package can then installed into your environment by running
 
 `pip install .`
 
-In this repo.  To do ML with TorNet, additional installs may be necessary depending on library of choice.  See e.g., `requirements/tensorflow.txt`, `requirements/torch.txt`.
+In this repo.  To do ML with TorNet, additional installs may be necessary depending on library of choice.  See e.g., `requirements/tensorflow.txt`, `requirements/torch.txt`.  
+
+Please note that we did not exhaustively test all combinations of operating systems and deep learning frameworks.  If you are using the latest version of `keras`, then I recommend you follow setup instructions on the keras webpage [https://keras.io/getting_started/](https://keras.io/getting_started/).  Feel free to describe any issues you are having under the issues tab.  
 
 ### Conda
 
