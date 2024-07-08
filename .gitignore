@@ -5,3 +5,5 @@ __pycache__/
 *.egg-info
 experiments/
 lightning_logs/
+tornado_baseline*
+tornet_baseline*
