@@ -49,8 +49,8 @@ class KerasDataLoader(keras.utils.PyDataset):
         weights: Dict = None,
         include_az: bool = False,
         random_state: int = 1234,
-        workers: int = 0,
-        use_multiprocessing: bool = True,
+        workers: int = 1,
+        use_multiprocessing: bool = False,
         max_queue_size: int = 10,
         select_keys: list=None
     ):
