@@ -74,13 +74,13 @@ def make_torch_loader(data_root: str,
         import tornet.data.tfds.tornet.tornet_dataset_builder # registers 'tornet'
         ds = tfds.data_source('tornet')
 
-        transforms_list = []
+        transform_list = []
 
         # Assumes data was saved with tilt_last=True and converts it to tilt_last=False
         if not tilt_last:
             transform_list.append(lambda d: pp.permute_dims(d,(0,3,1,2)))
 
-        transforms_list.append(
+        transform_list.append(
             lambda d: pp.remove_time_dim(d),
             lambda d: pp.add_coordinates(d, include_az=include_az, tilt_last=tilt_last, backend=torch),
             lambda d: pp.split_x_y(d)
@@ -90,12 +90,12 @@ def make_torch_loader(data_root: str,
             transform_list.append(lambda xy: pp.compute_sample_weight(*xy, **weights, backend=torch))
         
         if select_keys is not None:
-            transforms_list.append(
+            transform_list.append(
                 lambda xy: pp.select_keys(xy[0],keys=select_keys)+xy[1:]
             )
             
          # Dataset, with preprocessing
-        transform = transforms.Compose(transforms_list)
+        transform = transforms.Compose(transform_list)
 
         datasets = [TFDSTornadoDataset(ds['%s-%d' % (data_type,y)] ,transform) for y in years]
         dataset = torch.utils.data.ConcatDataset(datasets)
@@ -114,8 +114,8 @@ def make_torch_loader(data_root: str,
             transform_list.append(lambda xy: pp.compute_sample_weight(*xy, **weights, backend=torch))
         
         if select_keys is not None:
-            transforms_list.append(
-                lambda xy: pp.select_keys(xy[0],keys=select_keys)+xy[1:]
+            transform_list.append(
+                lambda xy: (pp.select_keys(xy[0],keys=select_keys),)+xy[1:]
             )
 
         # Dataset, with preprocessing
