@@ -1,2 +1,13 @@
-tensorflow
-tensorflow_datasets
+# Keras 3.0
+keras>=3.0
+
+# Data loading
+tensorflow-datasets
+
+# Tensorflow CPU support
+tensorflow-cpu
+
+# Tensorflow with cuda support
+#tensorflow[and-cuda]~=2.16.1
+
+-r basic.txt
