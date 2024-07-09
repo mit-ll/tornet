@@ -34,10 +34,10 @@ def make_torch_loader(data_root: str,
                 weights: Dict=None,
                 include_az: bool=False,
                 random_state:int=1234,
-                workers:int=8,
+                select_keys: list=None,
                 tilt_last: bool=True,
                 from_tfds: bool=False,
-                select_keys: list=None):
+                workers:int=8):
     """
     Initializes torch.utils.data.DataLoader for training CNN Tornet baseline.
 
@@ -49,13 +49,13 @@ def make_torch_loader(data_root: str,
     include_az - if True, coordinates also contains az field
     random_state - random seed for shuffling files
     workers - number of workers to use for loading batches
+    select_keys - Only generate a subset of keys from each tornet sample
     tilt_last - If True (default), order of dimensions is left as [batch,azimuth,range,tilt]
                 If False, order is permuted to [batch,tilt,azimuth,range]
     from_tfds - Use TFDS data loader, requires this version to be
                 built and TFDS_DATA_ROOT to be set.  
                 See tornet/data/tdfs/tornet/README.
                 If False (default), the basic loader is used
-    select_keys - Only generate a subset of keys from each tornet sample
 
     weights is optional, if provided must be a dict of the form
       weights={'wN':wN,'w0':w0,'w1':w1,'w2':w2,'wW':wW}
@@ -63,6 +63,7 @@ def make_torch_loader(data_root: str,
     ef0, ef1, ef2+ and warnings samples, respectively.  
 
     After loading TorNet samples, this does the following preprocessing:
+    - Optionaly permutes order of dimensions to not have tilt last
     - Takes only last time frame
     - adds 'coordinates' variable used by CoordConv layers. If include_az is True, this
       includes r, r^{-1} (and az if include_az is True)

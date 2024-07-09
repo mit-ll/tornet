@@ -111,14 +111,14 @@ def select_keys(x: Dict[str,np.ndarray],
     else:
         return x
 
-def permute_dims(data: Dict[str,np.ndarray], order:tuple):
+def permute_dims(data: Dict[str,np.ndarray], order:tuple, backend=np):
     """
     Permutes dimensions according to order (see np.transpose)
     Only tensors in data with ndim==len(order) are permuted
     """
     for v in ALL_VARIABLES+['range_folded_mask']:
         if data[v].ndim==len(order):
-            data[v]=np.transpose(data[v],order)
+            data[v]=backend.transpose(data[v],order)
     return data
 
 def split_x_y(d : Dict[str,np.ndarray]):

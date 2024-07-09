@@ -32,6 +32,7 @@ class KerasDataLoader(keras.utils.PyDataset):
     through the dataloader outside of keras.Model.fit()
 
     After loading TorNet samples, this does the following preprocessing:
+    - Optionaly permutes order of dimensions to not have tilt last
     - Takes only last time frame
     - adds 'coordinates' variable used by CoordConv layers. If include_az is True, this
       includes r, r^{-1} (and az if include_az is True)
@@ -49,10 +50,11 @@ class KerasDataLoader(keras.utils.PyDataset):
         weights: Dict = None,
         include_az: bool = False,
         random_state: int = 1234,
+        select_keys: list = None,
+        tilt_last: bool = True,
         workers: int = 0,
         use_multiprocessing: bool = True,
         max_queue_size: int = 10,
-        select_keys: list=None
     ):
         """
         data_root - location of TorNet
@@ -63,6 +65,10 @@ class KerasDataLoader(keras.utils.PyDataset):
         weights - optional sample weights, see note below
         include_az - if True, coordinates also contains az field
         random_state - random seed for shuffling files
+        select_keys - only generate a subset of keys from each tornet sample
+        tilt_last - if True (default), order of dimensions is left as 
+            [batch,azimuth,range,tilt] If False, order is permuted to 
+            [batch,tilt,azimuth,range]
         workers, use_multiprocessing, max_queue_size - see:
         https://keras.io/api/utils/python_utils/#pydataset-class
 
@@ -83,9 +89,8 @@ class KerasDataLoader(keras.utils.PyDataset):
         self.random_state = random_state
         self.select_keys=select_keys
 
-        self.file_list = query_catalog(data_root, data_type, 
-                                       years, random_state,
-                                       catalog=catalog)
+        self.tilt_last = tilt_last
+        self.file_list = query_catalog(data_root, data_type, years, random_state, catalog=catalog)
 
     def __len__(self) -> int:
         "Returns number of batches"
@@ -100,11 +105,11 @@ class KerasDataLoader(keras.utils.PyDataset):
 
         element_list = []
         for f in files_batch:
-            element_list.append(read_file(f, variables=ALL_VARIABLES, n_frames=1))
+            element_list.append(read_file(f, variables=ALL_VARIABLES, n_frames=1, tilt_last=self.tilt_last))
 
         # Transforms
         for element in element_list:
-            pp.add_coordinates(element, include_az=self.include_az, backend=np)
+            pp.add_coordinates(element, include_az=self.include_az, backend=np, tilt_last=self.tilt_last)
 
         # Add batch dimension to coordinates
         for el in element_list:

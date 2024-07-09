@@ -25,7 +25,8 @@ from tornet.data import preprocess as pp
 
 def create_tf_dataset(files:str,
                       variables: List[str]=ALL_VARIABLES,
-                      n_frames:int=1) -> tf.data.Dataset:
+                      n_frames:int=1,
+                      tilt_last: bool=True) -> tf.data.Dataset:
     """
     Creates a TF dataset object via the function read_file.   
     This dataset is somewhat slow because of the use of 
@@ -35,12 +36,12 @@ def create_tf_dataset(files:str,
     """
     assert len(files)>0
     # grab one file to gets keys, shapes, etc
-    data = read_file(files[0],variables=variables,n_frames=n_frames)
+    data = read_file(files[0],variables=variables,n_frames=n_frames, tilt_last=tilt_last)
     
     output_signature = { k:tf.TensorSpec(shape=data[k].shape,dtype=data[k].dtype,name=k) for k in data }
     def gen():
         for f in files:
-            yield read_file(f,variables=variables,n_frames=n_frames)
+            yield read_file(f,variables=variables,n_frames=n_frames, tilt_last=tilt_last)
     ds = tf.data.Dataset.from_generator(gen,
                                         output_signature=output_signature)
     return ds
@@ -86,8 +87,9 @@ def make_tf_loader(data_root: str,
             weights: Dict=None,
             include_az: bool=False,
             random_state:int=1234,
-            from_tfds: bool=False,
             select_keys: list=None,
+            tilt_last: bool=True,
+            from_tfds: bool=False,
             tfds_data_version: str='1.1.0'):
     """
     Initializes tf.data Dataset for training CNN Tornet baseline.
@@ -99,11 +101,13 @@ def make_tf_loader(data_root: str,
     weights - optional sample weights, see note below
     include_az - if True, coordinates also contains az field
     random_state - random seed for shuffling files
+    select_keys - Only generate a subset of keys from each tornet sample
+    tilt_last - If True (default), order of dimensions is left as [batch,azimuth,range,tilt]
+                If False, order is permuted to [batch,tilt,azimuth,range]
     from_tfds - Use TFDS data loader, requires this version to be
                 built and TFDS_DATA_ROOT to be set.  
                 See tornet/data/tdfs/tornet/README.
                 If False (default), the basic loader is used
-    select_keys - Only generate a subset of keys from each tornet sample
     
     If you leave from_tfds as False, I suggest adding ds=ds.cache( LOCATION ) 
     in the training script to cache the dataset to speed up training times (after epoch 1)
@@ -116,6 +120,7 @@ def make_tf_loader(data_root: str,
     ef0, ef1, ef2+ and warnings samples, respectively.  
 
     After loading TorNet samples, this does the following preprocessing:
+    - Optionaly permutes order of dimensions to not have tilt last
     - adds 'coordinates' variable used by CoordConv layers. If include_az is True, this
       includes r, r^{-1} (and az if include_az is True)
     - Takes only last time frame
@@ -127,11 +132,14 @@ def make_tf_loader(data_root: str,
         import tensorflow_datasets as tfds
         import tornet.data.tfds.tornet.tornet_dataset_builder # registers 'tornet'
         ds = tfds.load('tornet:%s' % tfds_data_version ,split='+'.join(['%s-%d' % (data_type,y) for y in years]))
+        # Assumes data was saved with tilt_last=True and converts it to tilt_last=False
+        if not tilt_last:
+            ds = ds.map(lambda d: pp.permute_dims(d,(0,3,1,2), backend=tf))
     else: # Load directly from netcdf files
         file_list = query_catalog(data_root, data_type, years, random_state)
-        ds = create_tf_dataset(file_list,variables=ALL_VARIABLES,n_frames=1) 
+        ds = create_tf_dataset(file_list,variables=ALL_VARIABLES,n_frames=1, tilt_last=tilt_last) 
 
-    ds=preproc(ds,weights,include_az,select_keys)
+    ds=preproc(ds,weights,include_az,select_keys,tilt_last)
     ds = ds.prefetch(tf.data.AUTOTUNE)
     ds = ds.batch(batch_size)
     return ds
@@ -139,7 +147,8 @@ def make_tf_loader(data_root: str,
 def preproc(ds: tf.data.Dataset,
             weights:Dict=None,
             include_az:bool=False,
-            select_keys:list=None):
+            select_keys:list=None,
+            tilt_last:bool=True):
     """
     Adds preprocessing steps onto dataloader
     """
@@ -148,7 +157,7 @@ def preproc(ds: tf.data.Dataset,
     ds = ds.map(pp.remove_time_dim)
 
     # Add coordiante tensors
-    ds = ds.map(lambda d: pp.add_coordinates(d,include_az=include_az,backend=tf))
+    ds = ds.map(lambda d: pp.add_coordinates(d,include_az=include_az,tilt_last=tilt_last,backend=tf))
 
     # split into X,y
     ds = ds.map(pp.split_x_y)
