@@ -11,5 +11,8 @@ if __name__ == "__main__":
     packages=find_packages(),
     package_data={},
     install_requires=[ 
+      # see requirements directory
     ],
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     ext_modules=[] )

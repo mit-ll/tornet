@@ -1,0 +1,11 @@
+# Keras 3.0
+keras>=3.0
+
+# Simple install
+jax
+
+# Jax with cuda support
+#jax[cuda12]
+#flax
+
+-r basic.txt

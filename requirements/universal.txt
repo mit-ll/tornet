@@ -1,0 +1,21 @@
+# Keras 3.0
+keras>=3.0
+
+# Data loading
+tensorflow-datasets
+
+# Jax
+jax
+flax
+
+# Torch
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch
+torchvision
+torchmetrics
+lightning
+
+# Tensorflow
+tensorflow
+
+-r basic.txt

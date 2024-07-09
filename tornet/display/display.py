@@ -139,7 +139,7 @@ def get_cmap(src):
         return cmap,norm
     elif 'VEL' in src or (src in ['N0U','N1U','N2U','N3U']) or ('vel_' in src):
         from matplotlib import cm
-        cmap=cm.get_cmap('seismic')
+        cmap=mpl.colormaps['seismic']
         cmap.set_under([.9,.9,.9])
         cmap.set_bad([.9,.9,.9])
         cmap.set_over([.9,.9,.9])

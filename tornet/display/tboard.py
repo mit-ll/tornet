@@ -16,7 +16,7 @@ import os
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-from tornet.display import plot_radar
+from tornet.display.display import plot_radar
 
 
 def log_image(data, score, filename, vars_to_plot, file_writer, step,):
