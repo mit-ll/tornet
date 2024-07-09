@@ -6,3 +6,10 @@ xarray
 netCDF4~=1.6.0
 tqdm
 glob2
+pytest
+
+# Optional,  if you want jupyter notebooks
+jupyter
+
+# Optional, if you want to use huggingface API to download pretrained model
+huggingface_hub
