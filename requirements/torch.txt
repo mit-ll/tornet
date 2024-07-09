@@ -1,10 +1,15 @@
 # Keras 3.0
-keras>=3.0, <=3.3
+keras>=3.0
+
+# Simple install
+torch
+torchvision
 
 # Torch with cuda support
---extra-index-url https://download.pytorch.org/whl/cu121
-torch==2.2.1+cu121
-torchvision==0.17.1+cu121
+#--extra-index-url https://download.pytorch.org/whl/cu121
+#torch==2.2.1+cu121
+#torchvision==0.17.1+cu121
+
 torchmetrics
 lightning
 

@@ -52,8 +52,8 @@ class KerasDataLoader(keras.utils.PyDataset):
         random_state: int = 1234,
         select_keys: list = None,
         tilt_last: bool = True,
-        workers: int = 0,
-        use_multiprocessing: bool = True,
+        workers: int = 1,
+        use_multiprocessing: bool = False,
         max_queue_size: int = 10,
     ):
         """

@@ -1,11 +1,11 @@
 # Keras 3.0
-keras>=3.0, <=3.3
+keras>=3.0
 
 # Data loading
 tensorflow-datasets
 
 # Jax
-jax[cuda12]
+jax
 flax
 
 # Torch
@@ -16,6 +16,6 @@ torchmetrics
 lightning
 
 # Tensorflow
-tensorflow[and-cuda]
+tensorflow
 
 -r basic.txt
