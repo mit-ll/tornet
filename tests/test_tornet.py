@@ -12,7 +12,7 @@ Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part
 
 """
 These test confirm the code *runs* and is useful for checking
-a python environment is set up properly.
+that the tornet dataset and your python environment are set up properly.
 """
 
 
@@ -26,9 +26,7 @@ import logging
 
 if 'TORNET_ROOT' not in os.environ:
     raise RuntimeError('TORNET_ROOT must be defined for unit tests')
-
-logging.info('Using KERAS_BACKEND '+keras.config.backend())
-
+DATA_ROOT=os.environ['TORNET_ROOT'] 
 
 try:
     from tornet.data.loader import read_file, TornadoDataLoader
@@ -39,8 +37,6 @@ try:
 except ImportError as e:
     print("WARNING: cannot import tornet library. Install it or add to path.")
     raise e
-
-DATA_ROOT=os.environ['TORNET_ROOT'] 
 
 
 
@@ -90,7 +86,8 @@ class KerasTests(unittest.TestCase):
         history=nn.fit(ds_train, epochs=1, steps_per_epoch=1, 
                        validation_data=ds_val,
                        validation_steps=1,
-                       shuffle=False)
+                       shuffle=False,
+                       verbose=0)
         
     def test_training_keras_dataloader(self):
         dataloader_kwargs = {'use_multiprocessing':False,'workers':1}
