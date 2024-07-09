@@ -41,15 +41,15 @@ After downloading, there should be 11 files, `catalog.csv`, and 10 files named a
 
 ## Setup
 
-Basic python requirements are listed in `requirements/basic.txt` and can be installed using `pip install -r requirements.txt`.
+Basic python requirements are listed in `requirements/basic.txt`.
 
 The `tornet` package can then installed into your environment by running
 
 `pip install .`
 
-In this repo.  To do ML with TorNet, additional installs may be necessary depending on library of choice.  See e.g., `requirements/tensorflow.txt`, `requirements/torch.txt`.  
+In this repo.  To do ML with TorNet, additional installs may be necessary depending on library of choice.  See e.g., `requirements/tensorflow.txt`, `requirements/torch.txt` and/or `requirements/jax.txt`.  
 
-Please note that we did not exhaustively test all combinations of operating systems, data loaders and deep learning frameworks.  If you are using the latest version of `keras`, then I recommend you follow setup instructions on the keras webpage [https://keras.io/getting_started/](https://keras.io/getting_started/).  Feel free to describe any issues you are having under the issues tab.  
+Please note that we did not exhaustively test all combinations of operating systems, data loaders, deep learning frameworks, and GPU usage.  If you are using the latest version of `keras`, then I recommend you follow setup instructions on the keras webpage [https://keras.io/getting_started/](https://keras.io/getting_started/).  Feel free to describe any issues you are having under the issues tab.  
 
 ### Conda
 
@@ -64,13 +64,11 @@ pip install -r requirements/{backend}.txt
 Replace {backend} with tensorflow, torch or jax.
 
 
-**Note**: The tensorflow environment might not properly set up paths to cuda libraries 
-leading to the GPU not being registered. See requirements/fix_cuda_paths.sh for 
-fix. 
-
 ## Loading and visualizing TorNet
 
 Start with `notebooks/DataLoaders.ipynb` to get an overview on loading and visualizing the dataset.
+
+To run inference on TorNet samples using a pretrained model,  look at `notebooks/VisualizeSamples.ipynb`.
 
 ## Train CNN baseline model
 
@@ -90,21 +88,21 @@ The following trains the CNN baseline model described in the paper using `tensor
 export TORNET_ROOT=/path/to/tornet     
 
 # Run training
-python scripts/tornado_detection/train_tornado_tf.py scripts/tornado_detection/config/params.json
+python scripts/tornado_detection/train_tornado_keras.py scripts/tornado_detection/config/params.json
 ```
 
 ## Evaluate trained model
-Weights of a pretrained CNN baseline are provided in `model/`.  To evaluate this model on the test set, run
+To evaluate this model on the test set, run
 
 ```
 # Set path to dataset
 export TORNET_ROOT=/path/to/tornet  
 
 # Evaluate trained model
-python scripts/tornado_detection/test_tornado_tf.py models/tornado_detector_baseline.SavedModel
+python scripts/tornado_detection/test_tornado_keras.py 
 ```
 
-This will compute and print various metrics computed on the test set.
+This will compute and print various metrics computed on the test set.  Note that this script will attempt to download pretrained weights from huggingface, so ensure there is internet connectivity.  Alternatively, manually download the pretrained yourself and provide with `--model_path`
 
 
 ### Disclosure
