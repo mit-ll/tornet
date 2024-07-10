@@ -50,8 +50,8 @@ def main():
         
     dataloader = args.dataloader
 
-    print(f"Using {keras.config.backend()} backend")
-    print(f"Using {dataloader} dataloader")
+    logging.info(f"Using {keras.config.backend()} backend")
+    logging.info(f"Using {dataloader} dataloader")
 
     if ("tfds" in dataloader) and ('TFDS_DATA_DIR' in os.environ):
         logging.info('Using TFDS dataset location at '+os.environ['TFDS_DATA_DIR'])
