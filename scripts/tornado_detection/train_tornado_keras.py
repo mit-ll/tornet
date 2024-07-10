@@ -99,8 +99,10 @@ def main(config):
     ds_train = get_dataloader(dataloader, DATA_ROOT, train_years, "train", batch_size, weights, **dataloader_kwargs)
     ds_val = get_dataloader(dataloader, DATA_ROOT, val_years, "train", batch_size, weights, **dataloader_kwargs)    
     
-    in_shapes = (None,None,2)
-    c_shapes = (None,None,2)
+    x, _, _ = next(iter(ds_train))
+    in_shapes = (None, None, get_shape(x)[-1])
+    c_shapes = (None, None, x["coordinates"].shape[-1])
+    
     nn = build_model(shape=in_shapes,
                      c_shape=c_shapes,
                      start_filters=start_filters,
