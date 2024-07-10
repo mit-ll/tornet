@@ -95,7 +95,7 @@ def main(config):
     weights={'wN':wN,'w0':w0,'w1':w1,'w2':w2,'wW':wW}
     
     # Create data laoders
-    dataloader_kwargs = {'select_keys':input_variables+['range_folded_mask','coordinates']}
+    dataloader_kwargs.update({'select_keys':input_variables+['range_folded_mask','coordinates']})
     ds_train = get_dataloader(dataloader, DATA_ROOT, train_years, "train", batch_size, weights, **dataloader_kwargs)
     ds_val = get_dataloader(dataloader, DATA_ROOT, val_years, "train", batch_size, weights, **dataloader_kwargs)    
     
