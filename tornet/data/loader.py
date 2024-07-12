@@ -15,10 +15,13 @@ Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part
 Tools to read tornado samples
 """
 from typing import Dict, List, Callable
+import datetime
 import numpy as np
 import xarray as xr
 
 from tornet.data.constants import ALL_VARIABLES
+import os
+import pandas as pd
 
 def read_file(f: str, 
               variables: List['str']=ALL_VARIABLES,
@@ -50,16 +53,29 @@ def read_file(f: str,
         # Various numeric metadata
         data['range_folded_mask'] = ds['range_folded_mask'].values[-n_frames:,:,:,:].astype(np.float32) # only two channels for vel,width
         data['label'] = ds['frame_labels'].values[-n_frames:] # 1 if tornado, 0 otherwise
-        data['category']=np.array([{'TOR':0,'NUL':1,'WRN':2}[ds.attrs['category']]]) # tornadic, null (random), or warning
-        data['event_id']=np.array([int(ds.attrs['event_id'])])
-        data['ef_number']=np.array([int(ds.attrs['ef_number'])])
+        data['category']=np.array([{'TOR':0,'NUL':1,'WRN':2}[ds.attrs['category']]],dtype=np.int64) # tornadic, null (random), or warning
+        data['event_id']=np.array([int(ds.attrs['event_id'])],dtype=np.int64)
+        data['ef_number']=np.array([int(ds.attrs['ef_number'])],dtype=np.int64)
         data['az_lower']=np.array(ds['azimuth_limits'].values[0:1])
-        data['az_upper']=np.array(ds['azimuth_limits'].values[1:])
+        data['az_upper']=np.array(ds['azimuth_limits'].values[1:]) 
         data['rng_lower']=np.array(ds['range_limits'].values[0:1])
         data['rng_upper']=np.array(ds['range_limits'].values[1:])
         data['time']=(ds.time.values[-n_frames:].astype(np.int64)/1e9).astype(np.int64)
+        
+        # Store start/end times for tornado (Added in v1.1)
+        if ds.attrs['ef_number']>=0 and ('tornado_start_time' in ds.attrs):
+            start_time=datetime.datetime.strptime(ds.attrs['tornado_start_time'],'%Y-%m-%d %H:%M:%S')
+            end_time=datetime.datetime.strptime(ds.attrs['tornado_end_time'],'%Y-%m-%d %H:%M:%S')
+            epoch = datetime.datetime(1970,1,1)
+            to_timestamp = lambda d: int((d - epoch).total_seconds())
+            start_time=to_timestamp(start_time)
+            end_time=to_timestamp(end_time)
+        else:
+            start_time=end_time=0
+        data['tornado_start_time'] = np.array([start_time]).astype(np.int64)
+        data['tornado_end_time'] = np.array([end_time]).astype(np.int64)
 
-    # Fix for v1 of the data
+    # Fix for v1.0 of the data
     # Make sure final label is consistent with ef_number 
     data['label'][-1] = (data['ef_number'][0]>=0)
     
@@ -69,7 +85,33 @@ def read_file(f: str,
         
     return data
 
+def query_catalog(data_root: str, 
+                  data_type: str, 
+                  years: list[int], 
+                  random_state: int,
+                  catalog: pd.DataFrame=None) -> list[str]:
+    """Obtain file names that match criteria.
+    If catalog is not provided, this loads and parses the 
+    default catalog.
 
+    Inputs:
+    data_root: location of data
+    data_type: train or test 
+    years: list of years btwn 2013 - 2022 to draw data from
+    random_state: random seed for shuffling files
+    catalog:  Preloaded catalog, optional
+    """
+    if catalog is None:
+        catalog_path = os.path.join(data_root,'catalog.csv')
+        if not os.path.exists(catalog_path):
+            raise RuntimeError('Unable to find catalog.csv at '+data_root)
+        catalog = pd.read_csv(catalog_path,parse_dates=['start_time','end_time'])
+    catalog = catalog[catalog['type']==data_type]
+    catalog = catalog[catalog.start_time.dt.year.isin(years)]
+    catalog = catalog.sample(frac=1, random_state=random_state) # shuffle file list
+    file_list = [os.path.join(data_root,f) for f in catalog.filename]
+
+    return file_list
 
 class TornadoDataLoader:
     """
@@ -107,8 +149,9 @@ class TornadoDataLoader:
         return self
     def __next__(self):
         if self.current_file_index<len(self):
+            out = self[self.current_file_index]
             self.current_file_index+=1
-            return self[self.current_file_index]
+            return out
         else:
             raise StopIteration
     def __getitem__(self,index:int):
@@ -123,10 +166,69 @@ class TornadoDataLoader:
         if self.transform:
             data = self.transform(data)
         return data
-       
+
     def __len__(self):
         return len(self.file_list)
-    
 
 
+def get_dataloader(
+    dataloader: str,
+    data_root: str,
+    years: list[int],
+    data_type: str,
+    batch_size: int,
+    weights: Dict[str, float] = None,
+    **kwargs,
+):
+    """Creates a dataloader for keras, torch or tensorflow
 
+    Inputs:
+    dataloader - str describing the dataloader to use. Valid options are: keras,
+    tensorflow, tensorflow-tfds, torch and torch-tfds
+    data_root - where data is located
+    years - years to load btwn 2013 and 2022
+    data_type - either train or test
+    batch_size - size of batch
+    weights - weights for different categories of sample
+
+    weights is optional, if provided must be a dict of the form
+      weights={'wN':wN,'w0':w0,'w1':w1,'w2':w2,'wW':wW}
+    where wN,w0,w1,w2,wW are numeric weights assigned to random,
+    ef0, ef1, ef2+ and warnings samples, respectively.
+
+    Returns:
+    tf.data.Dataset, torch.utils.data.DataLoader or tornet.data.keras.loader.KerasDataLoader
+    """
+
+    # Argument validation
+    valid_dataloaders = ["tensorflow", "tensorflow-tfds", "torch", "torch-tfds", "keras"]
+
+    # Convert string to lower case
+    dataloader = dataloader.lower()
+    assert dataloader in valid_dataloaders, f"dataloader must be in {valid_dataloaders}!"
+
+    from_tfds = False
+    if "tfds" in dataloader:
+        from_tfds = True
+
+    if "tensorflow" in dataloader:
+        import tensorflow as tf
+        from tornet.data.tf.loader import make_tf_loader
+        ds = make_tf_loader(data_root,data_type,years,batch_size,weights,from_tfds=from_tfds,**kwargs)
+
+        data_opts = tf.data.Options()
+        data_opts.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+        ds=ds.with_options(data_opts)
+
+    elif "torch" in dataloader:
+        from tornet.data.torch.loader import make_torch_loader
+        ds = make_torch_loader(data_root,data_type,years,batch_size,weights,from_tfds=from_tfds,**kwargs)
+    else:
+        from tornet.data.keras.loader import KerasDataLoader
+        ds = KerasDataLoader(data_root=data_root,
+                             data_type=data_type,
+                             years=years,
+                             batch_size=batch_size,
+                             weights=weights,**kwargs)
+
+    return ds

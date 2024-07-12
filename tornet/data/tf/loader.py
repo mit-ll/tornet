@@ -19,14 +19,14 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from tornet.data.loader import read_file
+from tornet.data.loader import query_catalog, read_file
 from tornet.data.constants import ALL_VARIABLES
-from tornet.data.tf import preprocess as pp 
-from tornet.data.preprocess import add_coordinates,remove_time_dim
+from tornet.data import preprocess as pp
 
 def create_tf_dataset(files:str,
                       variables: List[str]=ALL_VARIABLES,
-                      n_frames:int=1) -> tf.data.Dataset:
+                      n_frames:int=1,
+                      tilt_last: bool=True) -> tf.data.Dataset:
     """
     Creates a TF dataset object via the function read_file.   
     This dataset is somewhat slow because of the use of 
@@ -36,12 +36,12 @@ def create_tf_dataset(files:str,
     """
     assert len(files)>0
     # grab one file to gets keys, shapes, etc
-    data = read_file(files[0],variables=variables,n_frames=n_frames)
+    data = read_file(files[0],variables=variables,n_frames=n_frames, tilt_last=tilt_last)
     
     output_signature = { k:tf.TensorSpec(shape=data[k].shape,dtype=data[k].dtype,name=k) for k in data }
     def gen():
         for f in files:
-            yield read_file(f,variables=variables,n_frames=n_frames)
+            yield read_file(f,variables=variables,n_frames=n_frames, tilt_last=tilt_last)
     ds = tf.data.Dataset.from_generator(gen,
                                         output_signature=output_signature)
     return ds
@@ -80,15 +80,17 @@ def shard_function(data: tf.Tensor) -> np.int64:
 
 
 
-def make_ds(data_root: str, 
+def make_tf_loader(data_root: str, 
             data_type:str='train', # or 'test'
             years: list=list(range(2013,2023)),
             batch_size: int=128, 
             weights: Dict=None,
-            filter_warnings: bool=False,
             include_az: bool=False,
             random_state:int=1234,
-            from_tfds: bool=False):
+            select_keys: list=None,
+            tilt_last: bool=True,
+            from_tfds: bool=False,
+            tfds_data_version: str='1.1.0'):
     """
     Initializes tf.data Dataset for training CNN Tornet baseline.
 
@@ -97,9 +99,11 @@ def make_ds(data_root: str,
     years     - list of years btwn 2013 - 2022 to draw data from
     batch_size - batch size
     weights - optional sample weights, see note below
-    filter_warnings - if True, filters warning samples
     include_az - if True, coordinates also contains az field
     random_state - random seed for shuffling files
+    select_keys - Only generate a subset of keys from each tornet sample
+    tilt_last - If True (default), order of dimensions is left as [batch,azimuth,range,tilt]
+                If False, order is permuted to [batch,tilt,azimuth,range]
     from_tfds - Use TFDS data loader, requires this version to be
                 built and TFDS_DATA_ROOT to be set.  
                 See tornet/data/tdfs/tornet/README.
@@ -116,7 +120,7 @@ def make_ds(data_root: str,
     ef0, ef1, ef2+ and warnings samples, respectively.  
 
     After loading TorNet samples, this does the following preprocessing:
-    - optinally filters out warning samples (if filter_warnings is True)
+    - Optionaly permutes order of dimensions to not have tilt last
     - adds 'coordinates' variable used by CoordConv layers. If include_az is True, this
       includes r, r^{-1} (and az if include_az is True)
     - Takes only last time frame
@@ -127,44 +131,46 @@ def make_ds(data_root: str,
     if from_tfds: # fast loader
         import tensorflow_datasets as tfds
         import tornet.data.tfds.tornet.tornet_dataset_builder # registers 'tornet'
-        ds = tfds.load('tornet',split='+'.join(['%s-%d' % (data_type,y) for y in years]))
+        ds = tfds.load('tornet:%s' % tfds_data_version ,split='+'.join(['%s-%d' % (data_type,y) for y in years]))
+        # Assumes data was saved with tilt_last=True and converts it to tilt_last=False
+        if not tilt_last:
+            ds = ds.map(lambda d: pp.permute_dims(d,(0,3,1,2), backend=tf))
     else: # Load directly from netcdf files
-        # Load TorNet catalog
-        catalog_path = os.path.join(data_root,'catalog.csv')
-        if not os.path.exists(catalog_path):
-            raise RuntimeError('Unable to find catalog.csv at '+data_root)
-        catalog = pd.read_csv(catalog_path,parse_dates=['start_time','end_time'])
-        catalog = catalog[catalog['type']==data_type]
-        catalog = catalog[catalog.start_time.dt.year.isin(years)]
-        catalog = catalog.sample(frac=1,random_state=random_state) # shuffle file list
-        file_list = [os.path.join(data_root,f) for f in catalog.filename]
-        ds = create_tf_dataset(file_list,variables=ALL_VARIABLES,n_frames=1) 
+        file_list = query_catalog(data_root, data_type, years, random_state)
+        ds = create_tf_dataset(file_list,variables=ALL_VARIABLES,n_frames=1, tilt_last=tilt_last) 
 
-    ds=preproc(ds,weights,filter_warnings,include_az)
+    ds=preproc(ds,weights,include_az,select_keys,tilt_last)
     ds = ds.prefetch(tf.data.AUTOTUNE)
     ds = ds.batch(batch_size)
     return ds
 
 def preproc(ds: tf.data.Dataset,
             weights:Dict=None,
-            filter_warnings:bool=False,
-            include_az:bool=False):
+            include_az:bool=False,
+            select_keys:list=None,
+            tilt_last:bool=True):
     """
     Adds preprocessing steps onto dataloader
     """
-    if filter_warnings:
-        ds = ds.filter( lambda d: d['category'][0]!=2 )
-
-    # Add coordiante tensors
-    ds = ds.map(lambda d: add_coordinates(d,include_az=include_az,backend=tf))
 
     # Remove time dimesnion
-    ds = ds.map(remove_time_dim)
+    ds = ds.map(pp.remove_time_dim)
+
+    # Add coordiante tensors
+    ds = ds.map(lambda d: pp.add_coordinates(d,include_az=include_az,tilt_last=tilt_last,backend=tf))
 
     # split into X,y
     ds = ds.map(pp.split_x_y)
 
     # Add sample weights
     if weights:
-        ds = ds.map(lambda x,y:  pp.compute_sample_weight(x,y,**weights) )
+        ds = ds.map(lambda x,y:  pp.compute_sample_weight(x,y,**weights, backend=tf) )
+    
+        # select keys for input
+        if select_keys is not None:
+            ds = ds.map(lambda x,y,w: (pp.select_keys(x,keys=select_keys),y,w))
+    else:
+        if select_keys is not None:
+            ds = ds.map(lambda x,y: (pp.select_keys(x,keys=select_keys),y))
+
     return ds
