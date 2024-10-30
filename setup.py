@@ -9,7 +9,7 @@ if __name__ == "__main__":
     author='MIT Lincoln Laboratory, Group 43',
     author_email='mark.veillette@ll.mit.edu',
     packages=find_packages(),
-    package_data={},
+    package_data={'tornet.display':['cmaps.pkl']},
     install_requires=[ 
       # see requirements directory
     ],
