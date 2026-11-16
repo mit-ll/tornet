@@ -1,9 +1,9 @@
 # Required to run basic loaders and visualization
-numpy~=1.26.0
+numpy
 matplotlib
 pandas
 xarray
-netCDF4~=1.6.0
+netCDF4
 tqdm
 glob2
 pytest
